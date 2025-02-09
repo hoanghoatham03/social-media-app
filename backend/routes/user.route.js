@@ -13,9 +13,12 @@ import { upload } from "../middlewares/multer.js";
 
 const router = express.Router();
 
+// Auth Routes
 router.route("/register").post(register);
 router.route("/login").post(login);
 router.route("/logout").get(logout);
+
+// User Routes
 router.route("/:id/profile").get(isAuthenticated, getUser);
 router
   .route("/profile/edit")
