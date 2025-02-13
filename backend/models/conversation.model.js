@@ -8,6 +8,18 @@ const conversationSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+
+    type: {
+      type: String,
+      enum: ["group", "private"],
+      default: "private",
+    },
+
+    lastMessage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+    },
+
   },
   { timestamps: true }
 );

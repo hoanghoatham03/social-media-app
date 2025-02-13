@@ -12,6 +12,13 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    receiverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: function () {
+        return this.conversationId.type === "private";
+      },
+    },
     text: {
       type: String,
       required: true,
