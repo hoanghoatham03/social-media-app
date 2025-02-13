@@ -17,15 +17,15 @@ const router = express.Router();
 // Auth Routes
 router.route("/register").post(register);
 router.route("/login").post(login);
-router.route("/logout").post(logout);
 router.route("/refresh").post(refreshAccessToken);
+router.route("/logout").post(isAuthenticated, logout);
 
 // User Routes
 router.route("/:id/profile").get(isAuthenticated, getUserProfile);
 router
   .route("/:id/profile/edit")
   .post(isAuthenticated, upload.single("profilePicture"), updateUserProfile);
-router.route("/suggested/:id").get(isAuthenticated, getSuggestUser);
-router.route("follow/:id").post(isAuthenticated, followUser);
+router.route("/suggest/:id").get(isAuthenticated, getSuggestUser);
+router.route("/follow/:id").post(isAuthenticated, followUser);
 
 export default router;

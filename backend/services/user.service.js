@@ -216,6 +216,7 @@ export const followUserService = async (userId, followId) => {
       throw new Error("User not found");
     }
 
+    //check if user is already following the followUser
     if (user.following.includes(followId)) {
       await user.updateOne({ $pull: { following: followId } });
       await followUser.updateOne({ $pull: { followers: userId } });
@@ -223,11 +224,12 @@ export const followUserService = async (userId, followId) => {
       return "User unfollowed successfully";
     }
 
+    //if not, follow the user
     await user.updateOne({ $push: { following: followId } });
     await followUser.updateOne({ $push: { followers: userId } });
 
     return "User followed successfully";
   } catch (error) {
-    throw new Error(error);
+    throw new Error(error.message);
   }
 };

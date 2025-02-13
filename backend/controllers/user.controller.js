@@ -184,13 +184,17 @@ export const getSuggestUser = async (req, res) => {
   }
 };
 
+//follow a user
 export const followUser = async (req, res) => {
   const userId = req.params.id;
-  const followId = req.body.id;
+  const followId = req.body.followId;
 
   try {
-    const user = await followUserService(userId, followId);
-    res.status(200).json(user);
+    const result = await followUserService(userId, followId);
+    res.status(200).json({
+      message: result,
+      success: true,
+    });
   } catch (error) {
     res.status(500).json(error);
   }
