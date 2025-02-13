@@ -127,28 +127,36 @@ export const logoutService = async (userId) => {
   }
 };
 
+//get the user
 export const getUserService = async (userId) => {
   try {
     const user = await User.findById(userId);
+
     if (!user) {
       throw new Error("User not found");
     }
+
     const { password, ...userInfo } = user._doc;
+
     return userInfo;
   } catch (error) {
     throw new Error(error);
   }
 };
 
+//update the user profile
 export const updateUserService = async (userId, req) => {
   try {
     const { bio, gender } = req.body;
     const profilePicture = req.file;
     let cloudResponse;
 
+    //upload the profile picture to cloudinary
     if (profilePicture) {
       const fileUri = getDataUri(profilePicture);
-      cloudResponse = await cloudinary.uploader.upload(fileUri);
+      cloudResponse = await cloudinary.uploader.upload(fileUri, {
+        resource_type: "image",
+      });
     }
 
     const user = await User.findById(userId);
@@ -164,32 +172,37 @@ export const updateUserService = async (userId, req) => {
     const { password, ...userInfo } = updatedUser._doc;
     return userInfo;
   } catch (error) {
-    throw new Error(error);
+    throw new Error(error.message);
   }
 };
 
-export const getSuggestedUsersService = async (userId) => {
+//get suggestUser
+export const getSuggestUserService = async (userId) => {
   try {
     const user = await User.findById(userId);
     if (!user) {
       throw new Error("User not found");
     }
 
-    const suggestedUsers = user.following.length
+    //get suggest users
+    const suggestUser = user.following.length
       ? await User.aggregate([
           { $match: { _id: { $nin: [...user.following, userId] } } },
           { $sample: { size: 5 } },
+          { $project: { password: 0 } },
         ])
       : await User.aggregate([
           { $match: { _id: { $ne: userId } } },
           { $sample: { size: 5 } },
+          { $project: { password: 0 } },
         ]);
-    return suggestedUsers;
+    return suggestUser;
   } catch (error) {
-    throw new Error(error);
+    throw new Error(error.message);
   }
 };
 
+//follow a user
 export const followUserService = async (userId, followId) => {
   try {
     if (userId === followId) {

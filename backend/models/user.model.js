@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
     },
     gender: {
       type: String,
-      enum: ["make", "female", "other"],
+      enum: ["male", "female", "other"],
     },
     followers: [
       {

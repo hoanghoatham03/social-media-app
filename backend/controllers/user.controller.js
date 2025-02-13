@@ -5,7 +5,7 @@ import {
   loginService,
   getUserService,
   updateUserService,
-  getSuggestedUsersService,
+  getSuggestUserService,
   followUserService,
   refreshAccessTokenService,
   logoutService,
@@ -68,8 +68,12 @@ export const login = async (req, res) => {
         maxAge: 1 * 24 * 60 * 60 * 1000,
       })
       .json({
-        user: userInfo,
-        accessToken: accessToken,
+        message: "User logged in successfully",
+        success: true,
+        data: {
+          user: userInfo,
+          accessToken: accessToken,
+        },
       });
   } catch (error) {
     res.status(500).json(error);
@@ -80,7 +84,13 @@ export const login = async (req, res) => {
 export const refreshAccessToken = async (req, res) => {
   const { refreshToken } = req.body;
   const accessToken = await refreshAccessTokenService(refreshToken);
-  res.status(200).json({ accessToken });
+  res.status(200).json({
+    message: "Access token refreshed successfully",
+    success: true,
+    data: {
+      accessToken,
+    },
+  });
 };
 
 //logout the user
@@ -97,38 +107,78 @@ export const logout = async (req, res) => {
     
     await logoutService(userId);
     res.status(200).cookie("refreshToken", "", { maxAge: 0 }).json({
-      message: "User logged out",
+      message: "User logged out successfully",
+      success: true,
     });
   } catch (error) {
     res.status(500).json(error);
   }
 };
 
-export const getUser = async (req, res) => {
+//get the user
+export const getUserProfile = async (req, res) => {
   const userId = req.params.id;
-  try {
+
+  if (!userId) {
+    return res.status(400).json({
+      message: "User ID is required",
+      success: false,
+    });
+  }
+
+   try {
     const user = await getUserService(userId);
-    res.status(200).json(user);
+    res.status(200).json({
+      message: "User profile fetched successfully",
+      success: true,
+      data: {
+        user,
+      },
+    });
   } catch (error) {
     res.status(500).json(error);
   }
+  
 };
 
-export const updateUser = async (req, res) => {
+//update the user profile
+export const updateUserProfile = async (req, res) => {
   const userId = req.params.id;
+
+  if (!userId) {
+    return res.status(400).json({
+      message: "User ID is required",
+      success: false,
+    });
+  }
+
   try {
     const updatedUser = await updateUserService(userId, req);
-    res.status(200).json(updatedUser);
+    res.status(200).json({
+      message: "User updated successfully",
+      success: true,
+      data: {
+        user: updatedUser,
+      },
+    });
   } catch (error) {
     res.status(500).json(error);
   }
 };
 
-export const getSuggestedUsers = async (req, res) => {
+//get suggestUser
+export const getSuggestUser = async (req, res) => {
   const userId = req.params.id;
+
   try {
-    const suggestedUsers = await getSuggestedUsersService(userId);
-    res.status(200).json(suggestedUsers);
+    const suggestUser = await getSuggestUserService(userId);
+    res.status(200).json({
+      message: "Suggested users fetched successfully",
+      success: true,
+      data: {
+        suggestUser,
+      },
+    });
   } catch (error) {
     res.status(500).json(error);
   }
