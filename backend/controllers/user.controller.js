@@ -10,7 +10,6 @@ import {
   refreshAccessTokenService,
   logoutService,
 } from "../services/user.service.js";
-import { getPopularPosts } from "./post.controller.js";
 
 // Register a new user
 export const register = async (req, res) => {
