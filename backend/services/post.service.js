@@ -1,5 +1,6 @@
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
+import Comment from "../models/comment.model.js";
 import cloudinary from "../utils/cloudinary.js";
 
 //get posts for news feed
@@ -10,51 +11,57 @@ export const getPostsForNewsFeedService = async (
 ) => {
   try {
     const skip = (page - 1) * limit;
-
-    //get following users
     const user = await User.findById(userId).select("following");
     const followingUsers = user?.following || [];
 
     let posts = [];
     let hasMore = true;
 
-    //get posts of following users
+    // Get posts of following users
     if (followingUsers.length > 0) {
       posts = await Post.find({ author: { $in: followingUsers } })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate("author", "_id username profilePicture")
-        .populate("comments.user", "_id username profilePicture");
+        .populate({
+          path: "comments",
+          populate: {
+            path: "userId",
+            select: "_id username profilePicture",
+          },
+        });
     }
 
-    //if no following users or no more posts, get all posts
+    // If no following users or no posts, get other posts
     if (!posts || posts.length === 0) {
       posts = await Post.find({
-        author: { $ne: userId && { $nin: followingUsers } },
+        author: { $nin: [...followingUsers, userId] },
       })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .populate("author", "_id username profilePicture")
-        .populate("comments.user", "_id username profilePicture");
+        .populate({
+          path: "comments",
+          populate: {
+            path: "userId",
+            select: "_id username profilePicture",
+          },
+        });
     }
 
-    //check if there are more posts
-    if (posts.length < limit) {
-      hasMore = false;
-    }
-
+    hasMore = posts.length === limit;
     return { posts, hasMore };
   } catch (error) {
-    throw new Error(error);
+    console.error("Get posts error:", error);
+    throw new Error(error.message);
   }
 };
 
 //create post
 export const createPostService = async (userId, desc, fileUri) => {
   try {
-    
     //upload image to cloudinary
     const cloudResponse = await cloudinary.uploader.upload(fileUri, {
       resource_type: "auto",
@@ -77,6 +84,23 @@ export const createPostService = async (userId, desc, fileUri) => {
     post.populate("author", "_id username profilePicture");
 
     return post;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+//get post of a user
+export const getPostOfUserService = async (userId, page, limit) => {
+  try {
+    const skip = (page - 1) * limit;
+
+    const posts = await Post.find({ author: userId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("author", "_id username profilePicture");
+
+    return posts;
   } catch (error) {
     throw new Error(error.message);
   }

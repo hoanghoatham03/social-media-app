@@ -9,6 +9,7 @@ import {
   updateUserProfile,
   refreshAccessToken,
 } from "../controllers/user.controller.js";
+import { getPostOfUser } from "../controllers/post.controller.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 import { upload } from "../middlewares/multer.js";
 
@@ -27,5 +28,6 @@ router
   .post(isAuthenticated, upload.single("profilePicture"), updateUserProfile);
 router.route("/suggest/:id").get(isAuthenticated, getSuggestUser);
 router.route("/follow/:id").post(isAuthenticated, followUser);
+router.route("/:userId/posts").post(isAuthenticated, getPostOfUser);
 
 export default router;

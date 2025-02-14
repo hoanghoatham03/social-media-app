@@ -3,12 +3,15 @@ import Post from "../models/post.model.js";
 import {
   getPostsForNewsFeedService,
   createPostService,
+  getPostOfUserService,
 } from "../services/post.service.js";
 import getDataUri from "../utils/datauri.js";
 
 //get posts for news feed
 export const getPostsForNewsFeed = async (req, res) => {
   const { userId } = req.body;
+  const page = req.body.page || 1;
+  const limit = req.body.limit || 5;
 
   if (!userId) {
     return res.status(400).json({
@@ -18,9 +21,6 @@ export const getPostsForNewsFeed = async (req, res) => {
   }
 
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 5;
-
     const { posts, hasMore } = await getPostsForNewsFeedService(
       userId,
       page,
@@ -47,7 +47,14 @@ export const createPost = async (req, res) => {
     const { userId, desc } = req.body;
     const image = req.file;
 
-    if (!userId || !image) {
+    if (!userId) {
+      return res.status(400).json({
+        message: "User ID is required",
+        success: false,
+      });
+    }
+
+    if (!image) {
       return res.status(400).json({
         message: "Image is required",
         success: false,
@@ -69,6 +76,35 @@ export const createPost = async (req, res) => {
     console.error("Create post error:", error);
     res.status(500).json({
       message: error.message || "Internal server error",
+      success: false,
+    });
+  }
+};
+
+//get post of a user
+export const getPostOfUser = async (req, res) => {
+  const { userId } = req.params;
+  const page = req.body.page || 1;
+  const limit = req.body.limit || 5;
+
+  if (!userId) {
+    return res.status(400).json({
+      message: "User ID is required",
+      success: false,
+    });
+  }
+
+  try {
+    const posts = await getPostOfUserService(userId, page, limit);
+
+    res.status(200).json({
+      message: "Posts of user fetched successfully",
+      success: true,
+      data: posts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal server error",
       success: false,
     });
   }
