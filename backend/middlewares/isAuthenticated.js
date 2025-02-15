@@ -14,7 +14,7 @@ export const isAuthenticated = (req, res, next) => {
       return res.status(403).json("Invalid token");
     }
 
-    req.id = userId;
+    req.userId = userId;
     next();
   });
 };

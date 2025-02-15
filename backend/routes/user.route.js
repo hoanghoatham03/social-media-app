@@ -24,10 +24,10 @@ router.route("/logout").post(isAuthenticated, logout);
 // User Routes
 router.route("/:id/profile").get(isAuthenticated, getUserProfile);
 router
-  .route("/:id/profile/edit")
+  .route("/profile/edit")
   .post(isAuthenticated, upload.single("profilePicture"), updateUserProfile);
-router.route("/suggest/:id").get(isAuthenticated, getSuggestUser);
-router.route("/follow/:id").post(isAuthenticated, followUser);
-router.route("/:userId/posts").post(isAuthenticated, getPostOfUser);
+router.route("/suggest").get(isAuthenticated, getSuggestUser);
+router.route("/follow/:followId").post(isAuthenticated, followUser);
+router.route("/:userId/posts").get(isAuthenticated, getPostOfUser);
 
 export default router;

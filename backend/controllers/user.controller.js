@@ -95,7 +95,7 @@ export const refreshAccessToken = async (req, res) => {
 //logout the user
 export const logout = async (req, res) => {
   try {
-    const userId = req.body.userId;
+    const userId = req.userId;
     
     if (!userId) {
       return res.status(400).json({
@@ -142,7 +142,7 @@ export const getUserProfile = async (req, res) => {
 
 //update the user profile
 export const updateUserProfile = async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.userId;
 
   if (!userId) {
     return res.status(400).json({
@@ -167,7 +167,7 @@ export const updateUserProfile = async (req, res) => {
 
 //get suggestUser
 export const getSuggestUser = async (req, res) => {
-  const userId = req.params.id;
+  const userId = req.userId;
 
   try {
     const suggestUser = await getSuggestUserService(userId);
@@ -185,8 +185,8 @@ export const getSuggestUser = async (req, res) => {
 
 //follow a user
 export const followUser = async (req, res) => {
-  const userId = req.params.id;
-  const followId = req.body.followId;
+  const userId = req.userId;
+  const followId = req.params.followId;
 
   try {
     const result = await followUserService(userId, followId);
