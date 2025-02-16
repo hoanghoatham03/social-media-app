@@ -195,6 +195,7 @@ export const likePostService = async (postId, userId) => {
 
     //like post
     await post.updateOne({ $addToSet: { likes: userId } });
+    await post.updateOne({ $inc: { totalLikes: 1 } });
 
     //real time notification
     const user = await User.findById(userId).select("username profilePicture");
@@ -228,7 +229,9 @@ export const unlikePostService = async (postId, userId) => {
       throw new Error("Post not found");
     }
 
-    await Post.findByIdAndUpdate(postId, { $pull: { likes: userId } });
+    await post.updateOne({ $pull: { likes: userId } });
+    await post.updateOne({ $inc: { totalLikes: -1 } });
+    
     return "Post unliked successfully";
   } catch (error) {
     throw new Error(error.message);
