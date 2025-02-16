@@ -19,10 +19,14 @@ const messageSchema = new mongoose.Schema(
         return this.conversationId.type === "private";
       },
     },
-    text: {
+    message: {
       type: String,
       required: true,
     },
+    isRead: {
+      type: Boolean,
+      default: false,
+    }
   },
   { timestamps: true }
 );

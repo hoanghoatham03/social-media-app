@@ -2,7 +2,7 @@ import Comment from "../models/comment.model.js";
 import ReplyComment from "../models/replyComment.model.js";
 import User from "../models/user.model.js";
 import Post from "../models/post.model.js";
-import { getReceiverSocketId } from "../utils/socket.js";
+import { getReceiverSocketId, io } from "../utils/socket.js";
 
 //create comment
 export const createCommentService = async (postId, desc, userId) => {
