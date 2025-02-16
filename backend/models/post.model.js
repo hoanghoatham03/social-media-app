@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
+import Comment from "./comment.model.js";
 
 const postSchema = new mongoose.Schema(
   {
-    userId: {
+    author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -12,8 +13,15 @@ const postSchema = new mongoose.Schema(
       max: 500,
       default: "",
     },
-    img: {
-      type: String,
+    image: {
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
     },
     likes: [
       {
@@ -21,12 +29,20 @@ const postSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    totalLikes: {
+      type: Number,
+      default: 0,
+    },
     comments: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Comment",
       },
     ],
+    totalComments: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

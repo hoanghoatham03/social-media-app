@@ -153,9 +153,10 @@ export const updateUserService = async (userId, req) => {
 
     //upload the profile picture to cloudinary
     if (profilePicture) {
-      const fileUri = getDataUri(profilePicture);
+      const fileUri = await getDataUri(profilePicture);
+
       cloudResponse = await cloudinary.uploader.upload(fileUri, {
-        resource_type: "image",
+        resource_type: "auto",
       });
     }
 
@@ -166,7 +167,10 @@ export const updateUserService = async (userId, req) => {
 
     if (bio) user.bio = bio;
     if (gender) user.gender = gender;
-    if (cloudResponse) user.profilePicture = cloudResponse.secure_url;
+    if (cloudResponse) user.profilePicture = {
+      public_id: cloudResponse.public_id,
+      url: cloudResponse.url,
+    };
 
     const updatedUser = await user.save();
     const { password, ...userInfo } = updatedUser._doc;
