@@ -1,13 +1,14 @@
-import './App.css'
-import { Button } from './components/ui/button'
+import { Toaster } from "sonner";
+import "./App.css";
+import Signup from "./components/custom/Signup";
 
 function App() {
   return (
     <>
-      <h1>Hello World</h1>
-      <Button>Click me</Button>
+      <Signup />
+      <Toaster />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
