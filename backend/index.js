@@ -7,11 +7,10 @@ import connectDB from "./utils/db.js";
 import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
 import { createServer } from "http";
-import { initSocket } from "./utils/socket.js";
+import { app, server } from "./utils/socket.js";
 
 // Config
 dotenv.config();
-const app = express();
 const PORT = process.env.PORT || 8000;
 
 // Middleware
@@ -32,10 +31,8 @@ connectDB();
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/post", postRoutes);
 
-const httpServer = createServer(app);
-initSocket(httpServer);
 
 // Start server
-httpServer.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server started on http://localhost:${PORT}`);
 });
