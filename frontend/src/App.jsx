@@ -6,19 +6,25 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./components/custom/Layout";
 import Home from "./components/custom/Home";
 import Profile from "./components/custom/Profile";
+import PrivateRoutes from "./components/custom/PrivateRoutes";
+import EditProfile from "./components/custom/EditProfile";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Layout />,
+    element: <PrivateRoutes><Layout /></PrivateRoutes>,
     children: [
       {
         path: "/",
-        element: <Home />,
+        element: <PrivateRoutes><Home /></PrivateRoutes>,
       },
       {
-        path: "/profile",
-        element: <Profile />,
+        path: "/profile/:id",
+        element: <PrivateRoutes><Profile /></PrivateRoutes>,
+      },
+      {
+        path: "/edit-profile",
+        element: <PrivateRoutes><EditProfile /></PrivateRoutes>,
       },
     ],
   },

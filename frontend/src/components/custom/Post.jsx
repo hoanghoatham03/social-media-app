@@ -10,6 +10,8 @@ import { MessageCircle, Send, Bookmark } from "lucide-react";
 import { Badge } from "../ui/badge";
 import CommentDialog from "./CommentDialog";
 import { likePost, unlikePost } from "@/api/post";
+import { followUser, getUserProfile } from "@/api/user";
+import { createComment } from "@/api/comment";
 import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { toast } from "sonner";
 
@@ -19,6 +21,7 @@ const Post = ({ post }) => {
   const { user } = useSelector((store) => store.auth);
   const { posts } = useSelector((store) => store.post);
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
+  const [isFollowing, setIsFollowing] = useState( false);
   const [postLike, setPostLike] = useState(post.totalLikes);
   const [comment, setComment] = useState(post.totalComments);
   const dispatch = useDispatch();
@@ -85,9 +88,27 @@ const Post = ({ post }) => {
       console.log(error);
     }
   };
-  const commentHandler = () => {
-    console.log("commentHandler");
-  };
+  const commentHandler = async () => {
+    try {
+      const res = await createComment(post._id, text);
+      console.log("commentHandler", res);
+      if (res.success) {
+          const updatedCommentData = [...comment, res.data];
+          console.log("updatedCommentData", updatedCommentData);
+          setComment(updatedCommentData);
+
+          const updatedPostData = posts.map(p =>
+              p._id === post._id ? { ...p, comments: updatedCommentData } : p
+          );
+
+          dispatch(setPosts(updatedPostData));
+          toast.success("Comment added successfully");
+          setText("");
+      }
+  } catch (error) {
+      console.log(error);
+  }
+}
 
   const deletePostHandler = () => {
     console.log("deletePostHandler");
@@ -95,6 +116,35 @@ const Post = ({ post }) => {
 
   const bookmarkHandler = () => {
     console.log("bookmarkHandler");
+  };
+
+  const checkFollow = async (userId) => {
+    try {
+      const res = await getUserProfile(userId);
+      if (res.success) {
+        const isFollowing = res.data.user.followers.includes(user?._id);
+        if (isFollowing) {
+          setIsFollowing(true);
+        } else {
+          setIsFollowing(false);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const followHandler = async (userId) => {
+    try {
+      const res = await followUser(userId);
+      if (res.success) {
+        setIsFollowing(!isFollowing);
+      }
+      toast.success(res.message);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to follow");
+    }
   };
 
   return (
@@ -116,17 +166,28 @@ const Post = ({ post }) => {
           </div>
         </div>
         <Dialog>
-          <DialogTrigger asChild>
+          <DialogTrigger asChild onClick={() => checkFollow(post?.author?._id)}>
             <MoreHorizontal className="cursor-pointer" />
           </DialogTrigger>
-          <DialogContent className="flex flex-col items-center text-sm text-center">
+          <DialogContent className="flex flex-col items-center text-sm text-center" >
             {post?.author?._id !== user?._id && (
-              <Button
-                variant="ghost"
-                className="cursor-pointer w-fit text-[#ED4956] font-bold"
-              >
-                Unfollow
-              </Button>
+              isFollowing ? (
+                <Button
+                  onClick={() => followHandler(post?.author?._id)}
+                  variant="ghost"
+                  className="cursor-pointer w-fit text-[#ED4956] font-bold"
+                >
+                  Unfollow
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => followHandler(post?.author?._id)}
+                  variant="ghost"
+                  className="cursor-pointer w-fit text-[#ED4956] font-bold"
+                >
+                  Follow
+                </Button>
+              )
             )}
 
             <Button variant="ghost" className="cursor-pointer w-fit">
@@ -181,7 +242,7 @@ const Post = ({ post }) => {
         <span className="font-medium mr-2">{post.author?.username}</span>
         {post.desc}
       </p>
-      {comment.length > 0 && (
+      {post.totalComments > 0 && (
         <span
           onClick={() => {
             dispatch(setSelectedPost(post));
@@ -189,7 +250,7 @@ const Post = ({ post }) => {
           }}
           className="cursor-pointer text-sm text-gray-400"
         >
-          View all {comment.length} comments
+          View all {post.totalComments} comments
         </span>
       )}
       <CommentDialog open={open} setOpen={setOpen} />
