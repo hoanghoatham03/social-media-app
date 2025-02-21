@@ -41,16 +41,16 @@ const Post = ({ post }) => {
         setPostLike(updatedLikes);
         setLiked(!liked);
 
-        const updatedPostData = posts.map((p) =>
-          p._id === post._id
-            ? {
-                ...p,
-                likes: liked
-                  ? p.likes.filter((id) => id !== user._id)
-                  : [...p.likes, user._id],
-              }
-            : p
-        );
+        const updatedPostData = posts.map((p) => {
+          if (p._id === post._id) {
+            return {
+              ...p,
+              likes: liked ? p.likes.filter((id) => id !== user._id) : [...p.likes, user._id],
+              totalLikes: updatedLikes,
+            };
+          }
+          return p;
+        });
         dispatch(setPosts(updatedPostData));
         toast.success("Post liked successfully");
       }
@@ -68,16 +68,16 @@ const Post = ({ post }) => {
         setPostLike(updatedLikes);
         setLiked(!liked);
 
-        const updatedPostData = posts.map((p) =>
-          p._id === post._id
-            ? {
-                ...p,
-                likes: liked
-                  ? p.likes.filter((id) => id !== user._id)
-                  : [...p.likes, user._id],
-              }
-            : p
-        );
+        const updatedPostData = posts.map((p) => {
+          if (p._id === post._id) {
+            return {
+              ...p,
+              likes: p.likes.filter((id) => id !== user._id) ,
+              totalLikes: updatedLikes,
+            };
+          }
+          return p;
+        });
         dispatch(setPosts(updatedPostData));
         toast.success("Post disliked successfully");
       }
