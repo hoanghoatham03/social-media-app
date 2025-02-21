@@ -28,6 +28,6 @@ router
   .post(isAuthenticated, upload.single("profilePicture"), updateUserProfile);
 router.route("/suggest").get(isAuthenticated, getSuggestUser);
 router.route("/follow/:followId").post(isAuthenticated, followUser);
-router.route("/:userId/posts").get(isAuthenticated, getPostOfUser);
+
 
 export default router;

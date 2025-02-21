@@ -130,7 +130,10 @@ export const logoutService = async (userId) => {
 //get the user
 export const getUserService = async (userId) => {
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate({
+      path: "posts",
+      createdAt: -1,
+    });
 
     if (!user) {
       throw new Error("User not found");

@@ -4,7 +4,7 @@ import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
 const router = express.Router();
 
-router.route("/").post(isAuthenticated, createComment);
+router.route("/:postId").post(isAuthenticated, createComment);
 router.route("/:postId").get(isAuthenticated, getCommentsOfPost);
 router.route("/like").post(isAuthenticated, likeComment);
 router.route("/reply").post(isAuthenticated, createReplyComment);

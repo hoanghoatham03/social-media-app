@@ -161,7 +161,7 @@ export const deletePost = async (req, res) => {
 
 //get post of a user
 export const getPostOfUser = async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.userId;
   const page = req.body.page || 1;
   const limit = req.body.limit || 5;
 

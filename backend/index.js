@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import connectDB from "./utils/db.js";
 import userRoutes from "./routes/user.route.js";
 import postRoutes from "./routes/post.route.js";
+import commentRoutes from "./routes/comment.route.js";
 import { createServer } from "http";
 import { app, server } from "./utils/socket.js";
 
@@ -30,6 +31,7 @@ connectDB();
 // Routes
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/post", postRoutes);
+app.use("/api/v1/comment", commentRoutes);
 
 
 // Start server

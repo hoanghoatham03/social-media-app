@@ -25,7 +25,7 @@ export const createCommentService = async (postId, desc, userId) => {
         await Post.findByIdAndUpdate(postId, { $inc: { totalComments: 1 } });
 
         //populate comment
-        comment.populate("userId", "_id username profilePicture");
+        await comment.populate("userId", "_id username profilePicture");
 
         //get author of the post
         const authorId = post.userId;
