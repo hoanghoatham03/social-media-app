@@ -18,8 +18,8 @@ const router = express.Router();
 // Auth Routes
 router.route("/register").post(register);
 router.route("/login").post(login);
-router.route("/refresh").post(refreshAccessToken);
-router.route("/logout").post(isAuthenticated, logout);
+router.route("/refresh").get(refreshAccessToken);
+router.route("/logout").get(isAuthenticated, logout);
 
 // User Routes
 router.route("/:id/profile").get(isAuthenticated, getUserProfile);

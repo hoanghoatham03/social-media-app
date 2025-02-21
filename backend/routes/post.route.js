@@ -17,7 +17,7 @@ const router = express.Router();
 router.route("/news-feed").post(isAuthenticated, getPostsForNewsFeed);
 router.route("/:postId").get(isAuthenticated, getPostById);
 router.route("/user/:userId").get(isAuthenticated, getPostOfUser);
-router.route("/").post(upload.single("image"), isAuthenticated, createPost);
+router.route("/create").post(upload.single("image"), isAuthenticated, createPost);
 router
   .route("/update")
   .post(upload.single("image"), isAuthenticated, updatePost);
