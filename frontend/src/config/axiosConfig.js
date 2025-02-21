@@ -12,8 +12,8 @@ export const axiosInstance = axios.create({
 
   const renewAccessToken = async () => {
     try {
-      const response = await axiosInstance.post('/renew-access-token', {}, { withCredentials: true });
-      return response.data.accessToken;
+      const response = await axiosInstance.get('/user/refresh', {}, { withCredentials: true });
+      return response.data.data.accessToken;
     } catch (error) {
       console.error('Failed to renew access token:', error);
       throw error;
