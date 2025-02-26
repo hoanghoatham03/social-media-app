@@ -1,6 +1,6 @@
 import express from "express";
 import {
-  createConversation,
+  CheckandCreateConversation,
   getConversation,
   getAllConversations,
   getAllMessages,
@@ -10,10 +10,10 @@ import { isAuthenticated } from "../middlewares/isAuthenticated.js";
 
 const router = express.Router();
 
-router.route("/").post(isAuthenticated, createConversation);
-router.route("/:conversationId").get(isAuthenticated, getConversation);
-router.route("/").get(isAuthenticated, getAllConversations);
-router.route("/:conversationId").get(isAuthenticated, getAllMessages);
-router.route("/:conversationId").post(isAuthenticated, sendMessage);
+router.route("/").post(isAuthenticated, CheckandCreateConversation);
+router.route("/conversation/:conversationId").get(isAuthenticated, getConversation);
+router.route("/conversation").get(isAuthenticated, getAllConversations);
+router.route("/conversation/:conversationId/messages").get(isAuthenticated, getAllMessages);
+router.route("/message/create").post(isAuthenticated, sendMessage);
 
 export default router;

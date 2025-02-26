@@ -13,6 +13,8 @@ import {
 import storage from 'redux-persist/lib/storage'
 import postReducer from "./postSlice";
 import notificationReducer from "./notificationSlide";
+import conversationReducer from "./conversationSlice";
+import chatReducer from "./chatSlice";
 const persistConfig = {
     key: 'root',
     version: 1,
@@ -22,7 +24,9 @@ const persistConfig = {
 const rootReducer = combineReducers({
     auth: authReducer,
     post: postReducer,
-    notification: notificationReducer
+    notification: notificationReducer,
+    conversation: conversationReducer,
+    chat: chatReducer
   });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

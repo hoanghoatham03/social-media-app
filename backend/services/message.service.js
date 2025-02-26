@@ -2,8 +2,8 @@ import Message from "../models/message.model.js";
 import Conversation from "../models/conversation.model.js";
 import { getReceiverSocketId, io } from "../utils/socket.js";
 
-//create conversation
-export const createConversationService = async (members) => {
+//check conversation and create if not exists
+export const CheckandCreateConversationService = async (members) => {
   try {
     const existingConversation = await Conversation.findOne({
       members: { $all: members },
@@ -17,7 +17,7 @@ export const createConversationService = async (members) => {
 
     return conversation;
   } catch (error) {
-    console.log("error in createConversationService", error);
+    console.log("error in CheckandCreateConversationService", error);
     throw new Error(error);
   }
 };
