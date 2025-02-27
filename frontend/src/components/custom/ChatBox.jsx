@@ -6,7 +6,10 @@ import { Button } from "../ui/button";
 import { Send } from "lucide-react";
 import { getAllMessages, sendMessage } from "@/api/message";
 import { setMessages, addMessage } from "@/redux/chatSlice";
-import { setOnlineUsers } from "@/redux/conversationSlice";
+import {
+  setOnlineUsers,
+  updateConversationListOnly,
+} from "@/redux/conversationSlice";
 import { useSocket } from "@/context/SocketProvider";
 import { getInitials, formatDate } from "@/utils/utils";
 
@@ -178,6 +181,20 @@ const ChatBox = () => {
 
       // Add optimistic message as a new message
       addMessageIfNew(optimisticMessage);
+
+      // Use a separate worker thread to update the conversation list
+      setTimeout(() => {
+        // Update the conversation list only without affecting selected conversation
+        dispatch(
+          updateConversationListOnly({
+            conversationId: selectedConversation._id,
+            message: {
+              content: newMessage.trim(),
+              createdAt: new Date().toISOString(),
+            },
+          })
+        );
+      }, 0);
 
       // Send message via API for persistence first
       const response = await sendMessage(messageData);

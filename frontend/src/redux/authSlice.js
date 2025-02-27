@@ -2,7 +2,8 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   user: null,
-  suggestedUsers: [],
+  suggestedFollowUsers: [],
+  suggestedChatUsers: [],
   userProfile: null,
   selectedUser: null,
 };
@@ -14,8 +15,11 @@ const authSlice = createSlice({
     setAuthUser: (state, action) => {
       state.user = action.payload;
     },
-    setSuggestedUsers: (state, action) => {
-      state.suggestedUsers = action.payload;
+    setSuggestedFollowUsers: (state, action) => {
+      state.suggestedFollowUsers = action.payload;
+    },
+    setSuggestedChatUsers: (state, action) => {
+      state.suggestedChatUsers = action.payload;
     },
     setUserProfile: (state, action) => {
       state.userProfile = action.payload;
@@ -26,7 +30,12 @@ const authSlice = createSlice({
   },
 });
 
-export const { setAuthUser, setSuggestedUsers, setUserProfile, setSelectedUser } =
-  authSlice.actions;
+export const {
+  setAuthUser,
+  setSuggestedFollowUsers,
+  setSuggestedChatUsers,
+  setUserProfile,
+  setSelectedUser,
+} = authSlice.actions;
 
 export default authSlice.reducer;

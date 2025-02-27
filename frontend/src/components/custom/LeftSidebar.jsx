@@ -19,11 +19,14 @@ import CreatePost from "./CreatePost";
 import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
-
+import { persistor } from "@/redux/store";
+import { setIsStartChat } from "@/redux/conversationSlice";
+import Cookies from "js-cookie";
 const LeftSidebar = () => {
   const navigate = useNavigate();
   const { user } = useSelector((store) => store.auth);
   const { likeNotification } = useSelector((store) => store.notification);
+  const { isStartChat } = useSelector((store) => store.conversation);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
 
@@ -35,7 +38,14 @@ const LeftSidebar = () => {
         dispatch(setAuthUser(null));
         dispatch(setPosts([]));
         dispatch(setSelectedPost(null));
+        //clear local storage
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("persist:root");
+        //clear redux persist
+        persistor.purge();
+        dispatch(setIsStartChat(false));
+        //clear cookies
+        Cookies.remove("refreshToken");
         navigate("/login");
         toast.success(res.message);
       }

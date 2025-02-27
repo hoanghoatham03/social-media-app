@@ -1,9 +1,18 @@
 import { axiosInstance } from "../config/axiosConfig";
 
-export const getSuggestUser = async () => {
+export const getSuggestFollowUser = async () => {
   try {
-    const response = await axiosInstance.get("/user/suggest");
-    console.log(response.data);
+    const response = await axiosInstance.get("/user/suggest/follow");
+    console.log("response", response);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getSuggestChatUser = async () => {
+  try {
+    const response = await axiosInstance.get("/user/suggest/chat");
     return response.data;
   } catch (error) {
     console.log(error);

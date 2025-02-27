@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getAllConversations } from "@/api/message";
-import { getSuggestUser } from "@/api/user";
+import { getSuggestChatUser } from "@/api/user";
 import {
   setConversations,
   setSelectedConversation,
+  setIsStartChat,
   setOnlineUsers,
+  updateConversationListOnly,
 } from "@/redux/conversationSlice";
 import { CheckandCreateConversation } from "@/api/message";
 import { useSocket } from "@/context/SocketProvider";
@@ -21,6 +23,7 @@ const ChatUserList = () => {
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const { socket } = useSocket();
+  const processedMessageIds = useRef(new Set());
 
   const fetchConversations = async () => {
     try {
@@ -38,9 +41,9 @@ const ChatUserList = () => {
 
   const fetchSuggestedUsers = async () => {
     try {
-      const response = await getSuggestUser();
+      const response = await getSuggestChatUser();
       if (response.success) {
-        setSuggestedUsers(response.data.suggestUser);
+        setSuggestedUsers(response.data.suggestedChatUsers);
       }
     } catch (error) {
       console.error("Error fetching suggested users:", error);
@@ -55,10 +58,43 @@ const ChatUserList = () => {
   useEffect(() => {
     if (!socket) return;
 
-    // Listen for new messages to update conversation order
-    socket.on("receive_message", () => {
-      fetchConversations();
-    });
+    // Handle real-time message updates without affecting ChatBox
+    const handleReceiveMessage = (message) => {
+      // Prevent processing the same message multiple times
+      if (message._id && processedMessageIds.current.has(message._id)) {
+        return;
+      }
+
+      // Add message ID to processed set
+      if (message._id) {
+        processedMessageIds.current.add(message._id);
+      }
+
+      // Find the conversation that this message belongs to
+      const conversationId = message.conversation;
+
+      // Use the new reducer that only updates the conversation list without touching selectedConversation
+      if (conversationId) {
+        // Use setTimeout to defer the update and prevent blocking the UI
+        setTimeout(() => {
+          dispatch(
+            updateConversationListOnly({
+              conversationId,
+              message: {
+                content: message.content,
+                createdAt: message.createdAt,
+              },
+            })
+          );
+        }, 0);
+      } else {
+        // If this is a new conversation, fetch all conversations
+        // This should be rare since new conversations are usually created explicitly
+        fetchConversations();
+      }
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
 
     // Listen for online users updates
     const handleOnlineUsers = (users) => {
@@ -68,7 +104,7 @@ const ChatUserList = () => {
     socket.on("getOnlineUsers", handleOnlineUsers);
 
     return () => {
-      socket.off("receive_message");
+      socket.off("receive_message", handleReceiveMessage);
       socket.off("getOnlineUsers", handleOnlineUsers);
     };
   }, [socket, dispatch]);
@@ -88,6 +124,7 @@ const ChatUserList = () => {
 
   const handleConversationClick = (conversation) => {
     dispatch(setSelectedConversation(conversation));
+    dispatch(setIsStartChat(true));
   };
 
   const getOtherUser = (conversation) => {
@@ -97,6 +134,21 @@ const ChatUserList = () => {
   const isUserOnline = (userId) => {
     return onlineUsers.includes(userId);
   };
+
+  // Memoize sorted conversations to prevent unnecessary re-renders
+  const sortedConversations = useMemo(() => {
+    if (!Array.isArray(conversations)) return [];
+
+    return [...conversations].sort((a, b) => {
+      const timeA = a.lastMessage?.createdAt
+        ? new Date(a.lastMessage.createdAt).getTime()
+        : 0;
+      const timeB = b.lastMessage?.createdAt
+        ? new Date(b.lastMessage.createdAt).getTime()
+        : 0;
+      return timeB - timeA;
+    });
+  }, [conversations]);
 
   if (loading) {
     return <div className="p-4 text-center">Loading...</div>;
@@ -110,9 +162,9 @@ const ChatUserList = () => {
           <h3 className="font-medium text-lg">Conversations</h3>
         </div>
 
-        {Array.isArray(conversations) && conversations.length > 0 ? (
+        {sortedConversations.length > 0 ? (
           <div className="space-y-1">
-            {conversations.map((conversation) => {
+            {sortedConversations.map((conversation) => {
               const otherUser = getOtherUser(conversation);
               const isOnline = isUserOnline(otherUser?._id);
               return (

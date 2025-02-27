@@ -1,7 +1,8 @@
 import express from "express";
 import {
   followUser,
-  getSuggestUser,
+  getSuggestChatUser,
+  getSuggestFollowUser,
   getUserProfile,
   login,
   logout,
@@ -26,7 +27,8 @@ router.route("/:id/profile").get(isAuthenticated, getUserProfile);
 router
   .route("/profile/edit")
   .post(isAuthenticated, upload.single("profilePicture"), updateUserProfile);
-router.route("/suggest").get(isAuthenticated, getSuggestUser);
+router.route("/suggest/follow").get(isAuthenticated, getSuggestFollowUser);
+router.route("/suggest/chat").get(isAuthenticated, getSuggestChatUser);
 router.route("/follow/:followId").post(isAuthenticated, followUser);
 
 

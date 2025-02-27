@@ -5,10 +5,11 @@ import {
   loginService,
   getUserService,
   updateUserService,
-  getSuggestUserService,
+  getSuggestFollowUserService,
   followUserService,
   refreshAccessTokenService,
   logoutService,
+  getSuggestChatUserService,
 } from "../services/user.service.js";
 
 // Register a new user
@@ -165,17 +166,17 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-//get suggestUser
-export const getSuggestUser = async (req, res) => {
+//get suggest follow user
+export const getSuggestFollowUser = async (req, res) => {
   const userId = req.userId;
 
   try {
-    const suggestUser = await getSuggestUserService(userId);
+    const suggestedFollowUsers = await getSuggestFollowUserService(userId);
     res.status(200).json({
       message: "Suggested users fetched successfully",
       success: true,
       data: {
-        suggestUser,
+        suggestedFollowUsers,
       },
     });
   } catch (error) {
@@ -198,3 +199,22 @@ export const followUser = async (req, res) => {
     res.status(500).json(error);
   }
 };
+
+//get suggest chat user
+export const getSuggestChatUser = async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const suggestedChatUsers = await getSuggestChatUserService(userId);
+    res.status(200).json({
+      message: "Suggested users fetched successfully",
+      success: true,
+      data: {
+        suggestedChatUsers,
+      },
+    });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+

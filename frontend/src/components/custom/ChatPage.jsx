@@ -1,14 +1,14 @@
 import ChatUserList from "./ChatUserList";
 import ChatBox from "./ChatBox";
 import StartChat from "./StartChat";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useSocket } from "@/context/SocketProvider";
 
 const ChatPage = () => {
-  const { selectedConversation } = useSelector((state) => state.conversation);
   const { socket } = useSocket();
   const { user } = useSelector((state) => state.auth);
+  const { isStartChat } = useSelector((state) => state.conversation);
 
   useEffect(() => {
     // Update user's online status when entering the chat page
@@ -34,7 +34,7 @@ const ChatPage = () => {
         </div>
       </div>
       <div className="w-3/4 p-4">
-        {selectedConversation ? <ChatBox /> : <StartChat />}
+        {isStartChat ? <ChatBox /> : <StartChat />}
       </div>
     </div>
   );

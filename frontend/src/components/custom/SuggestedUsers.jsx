@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import SuggestedUser from "./SuggestedUser";
 
 const SuggestedUsers = () => {
-    const { suggestedUsers } = useSelector(store => store.auth);
+    const { suggestedFollowUsers } = useSelector(store => store.auth);
     
     return (
         <div className='my-10'>
@@ -16,7 +16,7 @@ const SuggestedUsers = () => {
                 <span className='font-medium cursor-pointer'>See All</span>
             </div>
             {
-                suggestedUsers?.map((user) => {
+                suggestedFollowUsers?.map((user) => {
                     return <SuggestedUser key={user._id} user={user} />
                 })
             }

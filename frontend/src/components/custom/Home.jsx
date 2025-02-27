@@ -5,8 +5,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setPosts, setPage, setHasMore } from "@/redux/postSlice";
 import { getPostsForNewsFeed } from "@/api/post";
-import { getSuggestUser } from "@/api/user";
-import { setSuggestedUsers } from "@/redux/authSlice";
+import { getSuggestFollowUser } from "@/api/user";
+import { setSuggestedFollowUsers } from "@/redux/authSlice";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -18,15 +18,15 @@ const Home = () => {
     dispatch(setPosts(posts.data));
   };
 
-  const fetchSuggestUser = async () => {
-    const users = await getSuggestUser();
+  const fetchSuggestedFollowUsers = async () => {
+    const users = await getSuggestFollowUser();
     console.log("users",users);
-    dispatch(setSuggestedUsers(users.data.suggestUser));
+    dispatch(setSuggestedFollowUsers(users.data.suggestedFollowUsers));
   };
 
   useEffect(() => {
     fetchPosts();
-    fetchSuggestUser();
+    fetchSuggestedFollowUsers();
     
     window.scrollTo({
       top: 0,
