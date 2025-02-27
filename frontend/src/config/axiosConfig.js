@@ -1,6 +1,5 @@
 import axios from "axios";
 import { BASE_URL, WHITE_LIST_ROUTES } from "../utils/appConstant";
-import Cookies from "js-cookie";
 
 export const axiosInstance = axios.create({
     baseURL: BASE_URL,
@@ -46,7 +45,8 @@ export const axiosInstance = axios.create({
     (response) => response,
     async (error) => {
         //if status code is 401 or 403
-        if (error.response && (error.response.status === 401 || error.response.status === 403 ) && Cookies.get("refreshToken")) {
+        let accessToken = localStorage.getItem("accessToken");
+        if (error.response && (error.response.status === 401 || error.response.status === 403 ) && accessToken) {
           const originalRequest = error.config;
     
          

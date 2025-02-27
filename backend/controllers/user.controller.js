@@ -83,6 +83,12 @@ export const login = async (req, res) => {
 //refresh the access token
 export const refreshAccessToken = async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    return res.status(401).json({
+      message: "Unauthorized",
+      success: false,
+    });
+  }
   const accessToken = await refreshAccessTokenService(refreshToken);
   res.status(200).json({
     message: "Access token refreshed successfully",
