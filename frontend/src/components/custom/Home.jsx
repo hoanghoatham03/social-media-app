@@ -20,7 +20,8 @@ const Home = () => {
 
   const fetchSuggestUser = async () => {
     const users = await getSuggestUser();
-    dispatch(setSuggestedUsers(users));
+    console.log("users",users);
+    dispatch(setSuggestedUsers(users.data.suggestUser));
   };
 
   useEffect(() => {

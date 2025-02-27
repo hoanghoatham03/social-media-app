@@ -13,25 +13,54 @@ const io = new Server(server, {
   },
 });
 
-const userSocketMap = {} ; // this map stores socket id corresponding the user id; userId -> socketId
+const userSocketMap = {}; // this map stores socket id corresponding the user id; userId -> socketId
 
 export const getReceiverSocketId = (receiverId) => userSocketMap[receiverId];
 
+// Socket connection handler
+io.on("connection", (socket) => {
+  const userId = socket.handshake.query.userId;
+  if (userId) {
+    userSocketMap[userId] = socket.id;
+  }
 
-io.on('connection', (socket)=>{
-    const userId = socket.handshake.query.userId;
-    if(userId){
-        userSocketMap[userId] = socket.id;
+  // Emit online users to all connected clients
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+  // Handle user_connected event
+  socket.on("user_connected", (userId) => {
+    userSocketMap[userId] = socket.id;
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+
+  // Handle user_disconnected event
+  socket.on("user_disconnected", (userId) => {
+    if (userId) {
+      delete userSocketMap[userId];
+    }
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+
+  // Handle new message event
+  socket.on("send_message", (messageData) => {
+    const receiverSocketId = userSocketMap[messageData.receiver];
+
+    // Send message to the specific receiver if online
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("receive_message", messageData);
     }
 
-    io.emit('getOnlineUsers', Object.keys(userSocketMap));
+    // Also send back to the sender to update their UI
+    socket.emit("receive_message", messageData);
+  });
 
-    socket.on('disconnect',()=>{
-        if(userId){
-            delete userSocketMap[userId];
-        }
-        io.emit('getOnlineUsers', Object.keys(userSocketMap));
-    });
-})
+  // Handle disconnect event
+  socket.on("disconnect", () => {
+    if (userId) {
+      delete userSocketMap[userId];
+    }
+    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
+});
 
-export {app, server, io};
+export { app, server, io };

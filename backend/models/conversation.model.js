@@ -6,6 +6,7 @@ const conversationSchema = new mongoose.Schema(
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
+        required: true,
       },
     ],
 
@@ -20,9 +21,22 @@ const conversationSchema = new mongoose.Schema(
       ref: "Message",
     },
 
+    lastMessageAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
+
+// Add index for efficient querying
+conversationSchema.index({ members: 1 });
+conversationSchema.index({ lastMessageAt: -1 });
 
 const Conversation = mongoose.model("Conversation", conversationSchema);
 

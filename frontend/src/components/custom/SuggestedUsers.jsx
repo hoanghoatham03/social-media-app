@@ -16,7 +16,7 @@ const SuggestedUsers = () => {
                 <span className='font-medium cursor-pointer'>See All</span>
             </div>
             {
-                suggestedUsers?.data?.suggestUser?.map((user) => {
+                suggestedUsers?.map((user) => {
                     return <SuggestedUser key={user._id} user={user} />
                 })
             }
