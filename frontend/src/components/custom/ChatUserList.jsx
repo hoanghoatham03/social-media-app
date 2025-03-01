@@ -15,6 +15,19 @@ import { CheckandCreateConversation } from "@/api/message";
 import { useSocket } from "@/context/SocketProvider";
 import { getInitials } from "@/utils/utils";
 
+// Create a debounce function
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
 const ChatUserList = () => {
   const dispatch = useDispatch();
   const { conversations, onlineUsers } = useSelector(
@@ -28,12 +41,28 @@ const ChatUserList = () => {
   const conversationRefreshTimerRef = useRef(null);
   const processedConversationIds = useRef(new Set()); // Track processed conversation IDs
   const initialLoadComplete = useRef(false);
+  const lastMessageTimestamps = useRef({}); // Track last message timestamps per conversation
 
   const fetchConversations = async () => {
     try {
       setLoading(true);
       const response = await getAllConversations();
       if (response.success) {
+        // Store the last message timestamp for each conversation
+        if (Array.isArray(response.data)) {
+          response.data.forEach((conv) => {
+            if (conv._id) {
+              const timestamp = conv.lastMessageAt
+                ? new Date(conv.lastMessageAt).getTime()
+                : conv.lastMessage?.createdAt
+                ? new Date(conv.lastMessage.createdAt).getTime()
+                : 0;
+
+              lastMessageTimestamps.current[conv._id] = timestamp;
+            }
+          });
+        }
+
         dispatch(setConversations(response.data));
         // Mark all fetched conversation IDs as processed
         response.data.forEach((conv) => {
@@ -126,6 +155,16 @@ const ChatUserList = () => {
   useEffect(() => {
     if (!socket || !initialLoadComplete.current) return;
 
+    // Create a debounced update function
+    const debouncedUpdateConversation = debounce((conversationId, message) => {
+      dispatch(
+        updateConversationListOnly({
+          conversationId,
+          message,
+        })
+      );
+    }, 300); // 300ms debounce time
+
     // Handle real-time message updates without affecting ChatBox
     const handleReceiveMessage = (message) => {
       console.log("Receive message:", message);
@@ -148,22 +187,36 @@ const ChatUserList = () => {
         const existingConversation = hasConversation(conversationId);
 
         if (existingConversation) {
-          // Use the existing update method for known conversations
-          dispatch(
-            updateConversationListOnly({
-              conversationId,
-              message: {
-                content: message.content,
-                createdAt: message.createdAt,
-              },
-            })
-          );
+          // Get the message timestamp
+          const messageTime = new Date(message.createdAt).getTime();
+
+          // Check if this message is newer than the last one we processed for this conversation
+          const lastTimestamp =
+            lastMessageTimestamps.current[conversationId] || 0;
+
+          // Only update if this message is newer
+          if (messageTime >= lastTimestamp) {
+            // Update our timestamp record
+            lastMessageTimestamps.current[conversationId] = messageTime;
+
+            // Use debounced update to prevent rapid re-renders
+            debouncedUpdateConversation(conversationId, {
+              content: message.content,
+              createdAt: message.createdAt,
+            });
+          }
         } else if (message.conversationDetails) {
           // If we have explicit conversation details, use them
           console.log(
             "Adding new conversation from explicit details:",
             message.conversationDetails
           );
+
+          // Store timestamp for this new conversation
+          if (message.createdAt && message.conversationDetails._id) {
+            lastMessageTimestamps.current[message.conversationDetails._id] =
+              new Date(message.createdAt).getTime();
+          }
 
           const added = addConversationToStore(message.conversationDetails);
 
@@ -178,6 +231,13 @@ const ChatUserList = () => {
           const minimalConversation = createConversationFromMessage(message);
 
           if (minimalConversation) {
+            // Store timestamp for this new conversation
+            if (message.createdAt && minimalConversation._id) {
+              lastMessageTimestamps.current[minimalConversation._id] = new Date(
+                message.createdAt
+              ).getTime();
+            }
+
             const added = addConversationToStore(minimalConversation);
             if (added) {
               fetchSuggestedUsers();
@@ -243,6 +303,19 @@ const ChatUserList = () => {
     try {
       const response = await CheckandCreateConversation({ receiverId: userId });
       if (response.success) {
+        // Store the timestamp for this conversation
+        if (response.data && response.data._id) {
+          const timestamp = response.data.lastMessageAt
+            ? new Date(response.data.lastMessageAt).getTime()
+            : response.data.lastMessage?.createdAt
+            ? new Date(response.data.lastMessage.createdAt).getTime()
+            : response.data.createdAt
+            ? new Date(response.data.createdAt).getTime()
+            : Date.now();
+
+          lastMessageTimestamps.current[response.data._id] = timestamp;
+        }
+
         // Add the new conversation to Redux directly instead of fetching all
         addConversationToStore(response.data);
         // Set this as the selected conversation
@@ -273,12 +346,19 @@ const ChatUserList = () => {
     if (!Array.isArray(conversations)) return [];
 
     return [...conversations].sort((a, b) => {
-      const timeA = a.lastMessage?.createdAt
+      // For sorting, prefer the lastMessageAt property if available
+      const timeA = a.lastMessageAt
+        ? new Date(a.lastMessageAt).getTime()
+        : a.lastMessage?.createdAt
         ? new Date(a.lastMessage.createdAt).getTime()
-        : 0;
-      const timeB = b.lastMessage?.createdAt
+        : new Date(a.createdAt || 0).getTime();
+
+      const timeB = b.lastMessageAt
+        ? new Date(b.lastMessageAt).getTime()
+        : b.lastMessage?.createdAt
         ? new Date(b.lastMessage.createdAt).getTime()
-        : 0;
+        : new Date(b.createdAt || 0).getTime();
+
       return timeB - timeA;
     });
   }, [conversations]);

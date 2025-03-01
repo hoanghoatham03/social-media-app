@@ -3,7 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Send } from "lucide-react";
+import { Send, Smile } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
 import { getAllMessages, sendMessage } from "@/api/message";
 import { setMessages, addMessage } from "@/redux/chatSlice";
 import {
@@ -22,7 +23,9 @@ const ChatBox = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef(null);
+  const emojiPickerRef = useRef(null);
   const processedMessageIds = useRef(new Set());
   const dispatch = useDispatch();
   const { socket } = useSocket();
@@ -31,6 +34,23 @@ const ChatBox = () => {
     (state) => state.conversation
   );
   const { messages } = useSelector((state) => state.chat);
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const getOtherUser = () => {
     if (!selectedConversation) return null;
@@ -153,6 +173,9 @@ const ChatBox = () => {
     try {
       setSending(true);
 
+      // Generate current timestamp once to ensure consistency
+      const currentTime = new Date().toISOString();
+
       const messageData = {
         conversation: selectedConversation._id,
         content: newMessage.trim(),
@@ -171,7 +194,7 @@ const ChatBox = () => {
           profilePicture: user.profilePicture,
         },
         content: newMessage.trim(),
-        createdAt: new Date().toISOString(),
+        createdAt: currentTime,
         conversation: selectedConversation._id,
         temporary: true,
       };
@@ -182,19 +205,16 @@ const ChatBox = () => {
       // Add optimistic message as a new message
       addMessageIfNew(optimisticMessage);
 
-      // Use a separate worker thread to update the conversation list
-      setTimeout(() => {
-        // Update the conversation list only without affecting selected conversation
-        dispatch(
-          updateConversationListOnly({
-            conversationId: selectedConversation._id,
-            message: {
-              content: newMessage.trim(),
-              createdAt: new Date().toISOString(),
-            },
-          })
-        );
-      }, 0);
+      // Update the conversation list to show this conversation at the top
+      dispatch(
+        updateConversationListOnly({
+          conversationId: selectedConversation._id,
+          message: {
+            content: newMessage.trim(),
+            createdAt: currentTime,
+          },
+        })
+      );
 
       // Send message via API for persistence first
       const response = await sendMessage(messageData);
@@ -204,13 +224,34 @@ const ChatBox = () => {
         // to prevent duplicates when the socket event is received
         if (response.data && response.data._id) {
           processedMessageIds.current.add(response.data._id);
-        }
 
-        // Emit the message via socket ONLY after successful API call
-        if (socket) {
+          // Get server timestamp or use our original timestamp
+          const serverTime = response.data.createdAt || currentTime;
+
+          // Update the conversation again with the confirmed message and server timestamp
+          dispatch(
+            updateConversationListOnly({
+              conversationId: selectedConversation._id,
+              message: {
+                content: response.data.content || newMessage.trim(),
+                createdAt: serverTime,
+              },
+            })
+          );
+
+          // If using sockets, emit with the server timestamp to ensure consistency
+          if (socket) {
+            socket.emit("send_message", {
+              ...messageData,
+              _id: response.data._id,
+              createdAt: serverTime, // Include the timestamp for consistency
+            });
+          }
+        } else if (socket) {
+          // Fallback if no data returned but API succeeded
           socket.emit("send_message", {
             ...messageData,
-            _id: response.data?._id, // Include the server-generated ID if available
+            createdAt: currentTime,
           });
         }
       } else {
@@ -234,6 +275,16 @@ const ChatBox = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  // Handle emoji selection
+  const onEmojiClick = (emojiObject) => {
+    setNewMessage((prevMessage) => prevMessage + emojiObject.emoji);
+  };
+
+  // Toggle emoji picker
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker((prev) => !prev);
   };
 
   // Check if the otherUser is online
@@ -333,21 +384,64 @@ const ChatBox = () => {
       </div>
 
       {/* Message input */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t flex gap-2">
-        <Input
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={handleKeyPress}
-          placeholder="Type a message..."
-          className="flex-1"
-        />
+      <form
+        onSubmit={handleSendMessage}
+        className="p-4 border-t flex gap-2 relative"
+      >
+        <div className="flex-1 relative flex items-center bg-white rounded-md ring-1 ring-gray-200 focus-within:ring-2 focus-within:ring-blue-500">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Type a message..."
+            className="flex-1 border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={toggleEmojiPicker}
+            className="h-8 w-8 rounded-full p-0 mr-1"
+          >
+            <Smile className="h-5 w-5 text-gray-500 hover:text-blue-500 transition-colors" />
+          </Button>
+        </div>
         <Button
           type="button"
           onClick={handleSendMessage}
           disabled={!newMessage.trim() || sending}
+          className="transition-all"
         >
           <Send className="h-4 w-4" />
         </Button>
+
+        {/* Emoji Picker */}
+        {showEmojiPicker && (
+          <div
+            ref={emojiPickerRef}
+            className="absolute bottom-20 right-4 z-10 shadow-xl rounded-lg border border-gray-200"
+            style={{
+              boxShadow:
+                "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+              animation: "fadeIn 0.2s ease-in-out",
+            }}
+          >
+            <style>
+              {`
+              @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+              `}
+            </style>
+            <EmojiPicker
+              onEmojiClick={onEmojiClick}
+              searchPlaceHolder="Search emoji..."
+              width={300}
+              height={400}
+            />
+          </div>
+        )}
       </form>
     </div>
   );

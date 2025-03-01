@@ -113,29 +113,47 @@ const conversationSlice = createSlice({
       );
 
       if (conversationIndex >= 0) {
-        // Create a copy of the conversation
-        const conversation = { ...state.conversations[conversationIndex] };
+        // Create a deep copy of the conversation
+        const conversation = JSON.parse(
+          JSON.stringify(state.conversations[conversationIndex])
+        );
 
-        // Update the conversation with the latest message
-        if (message) {
-          conversation.lastMessage = {
-            content: message.content,
-            createdAt: message.createdAt,
-          };
-          conversation.lastMessageAt = message.createdAt;
+        // Check if the incoming message is newer than what we already have
+        const messageTime = message?.createdAt
+          ? new Date(message.createdAt).getTime()
+          : 0;
+
+        const existingLastMessageTime = conversation.lastMessageAt
+          ? new Date(conversation.lastMessageAt).getTime()
+          : conversation.lastMessage?.createdAt
+          ? new Date(conversation.lastMessage.createdAt).getTime()
+          : 0;
+
+        // Only update if the new message is newer or there is no existing timestamp
+        if (
+          !existingLastMessageTime ||
+          messageTime >= existingLastMessageTime
+        ) {
+          // Update the conversation with the latest message
+          if (message) {
+            conversation.lastMessage = {
+              content: message.content,
+              createdAt: message.createdAt,
+            };
+            conversation.lastMessageAt = message.createdAt;
+          }
+
+          // Create a new array with all conversations except the updated one
+          const updatedConversations = state.conversations.filter(
+            (conv) => conv._id !== conversationId
+          );
+
+          // Add the updated conversation at the beginning
+          updatedConversations.unshift(conversation);
+
+          // Replace the entire conversations array at once
+          state.conversations = updatedConversations;
         }
-
-        // Update conversations array
-        const newConversations = [...state.conversations];
-
-        // Remove from current position
-        newConversations.splice(conversationIndex, 1);
-
-        // Add to beginning
-        newConversations.unshift(conversation);
-
-        // Replace entire array at once to avoid multiple renders
-        state.conversations = newConversations;
       }
     },
   },
