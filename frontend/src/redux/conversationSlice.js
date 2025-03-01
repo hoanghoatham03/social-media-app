@@ -8,6 +8,7 @@ const conversationSlice = createSlice({
     isStartChat: false,
     onlineUsers: [],
     type: null,
+    hasUnreadMessage: false,
   },
   reducers: {
     setConversations: (state, action) => {
@@ -21,6 +22,23 @@ const conversationSlice = createSlice({
     },
     setOnlineUsers: (state, action) => {
       state.onlineUsers = action.payload;
+    },
+    setHasUnreadMessage: (state, action) => {
+      state.hasUnreadMessage = action.payload;
+    },
+    // Add a new conversation to the list without fetching all conversations
+    addNewConversation: (state, action) => {
+      const newConversation = action.payload;
+
+      // Check if the conversation already exists
+      const exists = state.conversations.some(
+        (conv) => conv._id === newConversation._id
+      );
+
+      if (!exists) {
+        // Add the new conversation to the beginning of the array (most recent)
+        state.conversations = [newConversation, ...state.conversations];
+      }
     },
     updateConversation: (state, action) => {
       const updatedConversation = action.payload;
@@ -128,9 +146,11 @@ export const {
   setSelectedConversation,
   setIsStartChat,
   setOnlineUsers,
+  setHasUnreadMessage,
   updateConversationOrder,
   updateConversation,
   updateConversationListOnly,
+  addNewConversation,
 } = conversationSlice.actions;
 
 export default conversationSlice.reducer;

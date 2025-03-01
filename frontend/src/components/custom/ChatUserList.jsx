@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { getAllConversations } from "@/api/message";
@@ -9,6 +9,7 @@ import {
   setIsStartChat,
   setOnlineUsers,
   updateConversationListOnly,
+  addNewConversation,
 } from "@/redux/conversationSlice";
 import { CheckandCreateConversation } from "@/api/message";
 import { useSocket } from "@/context/SocketProvider";
@@ -24,6 +25,9 @@ const ChatUserList = () => {
   const [loading, setLoading] = useState(true);
   const { socket } = useSocket();
   const processedMessageIds = useRef(new Set());
+  const conversationRefreshTimerRef = useRef(null);
+  const processedConversationIds = useRef(new Set()); // Track processed conversation IDs
+  const initialLoadComplete = useRef(false);
 
   const fetchConversations = async () => {
     try {
@@ -31,6 +35,11 @@ const ChatUserList = () => {
       const response = await getAllConversations();
       if (response.success) {
         dispatch(setConversations(response.data));
+        // Mark all fetched conversation IDs as processed
+        response.data.forEach((conv) => {
+          if (conv._id) processedConversationIds.current.add(conv._id);
+        });
+        initialLoadComplete.current = true;
       }
     } catch (error) {
       console.error("Error fetching conversations:", error);
@@ -50,16 +59,77 @@ const ChatUserList = () => {
     }
   };
 
+  // Memoized function to check if we already have a conversation
+  const hasConversation = useCallback(
+    (conversationId) => {
+      return conversations.some((conv) => conv._id === conversationId);
+    },
+    [conversations]
+  );
+
+  // Create new conversation object from minimal data if needed
+  const createConversationFromMessage = useCallback(
+    (message) => {
+      // If we have required data to build a minimal conversation object
+      if (message && message.conversation && message.sender) {
+        const otherUser = message.sender;
+        const conversationId = message.conversation;
+
+        return {
+          _id: conversationId,
+          members: [otherUser, user],
+          lastMessage: {
+            content: message.content,
+            createdAt: message.createdAt,
+          },
+          lastMessageAt: message.createdAt,
+          createdAt: message.createdAt || new Date(),
+        };
+      }
+      return null;
+    },
+    [user]
+  );
+
+  // Memoized function to add a new conversation efficiently
+  const addConversationToStore = useCallback(
+    (conversation) => {
+      if (!conversation || !conversation._id) {
+        console.warn("Attempted to add invalid conversation:", conversation);
+        return false;
+      }
+
+      // Check if we've already processed this conversation ID
+      if (processedConversationIds.current.has(conversation._id)) {
+        return false;
+      }
+
+      // Check if the conversation already exists in our store
+      if (!hasConversation(conversation._id)) {
+        // Add to our processed set
+        processedConversationIds.current.add(conversation._id);
+        // Add to Redux store
+        dispatch(addNewConversation(conversation));
+        return true;
+      }
+
+      return false;
+    },
+    [dispatch, hasConversation]
+  );
+
   useEffect(() => {
     fetchConversations();
     fetchSuggestedUsers();
   }, []);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !initialLoadComplete.current) return;
 
     // Handle real-time message updates without affecting ChatBox
     const handleReceiveMessage = (message) => {
+      console.log("Receive message:", message);
+
       // Prevent processing the same message multiple times
       if (message._id && processedMessageIds.current.has(message._id)) {
         return;
@@ -73,10 +143,12 @@ const ChatUserList = () => {
       // Find the conversation that this message belongs to
       const conversationId = message.conversation;
 
-      // Use the new reducer that only updates the conversation list without touching selectedConversation
       if (conversationId) {
-        // Use setTimeout to defer the update and prevent blocking the UI
-        setTimeout(() => {
+        // Check if this conversation exists in our current list
+        const existingConversation = hasConversation(conversationId);
+
+        if (existingConversation) {
+          // Use the existing update method for known conversations
           dispatch(
             updateConversationListOnly({
               conversationId,
@@ -86,11 +158,36 @@ const ChatUserList = () => {
               },
             })
           );
-        }, 0);
-      } else {
-        // If this is a new conversation, fetch all conversations
-        // This should be rare since new conversations are usually created explicitly
-        fetchConversations();
+        } else if (message.conversationDetails) {
+          // If we have explicit conversation details, use them
+          console.log(
+            "Adding new conversation from explicit details:",
+            message.conversationDetails
+          );
+
+          const added = addConversationToStore(message.conversationDetails);
+
+          // If we successfully added a new conversation, update suggested users
+          if (added) {
+            fetchSuggestedUsers();
+          }
+        } else {
+          // If we don't have conversation details but can build minimal conversation info
+          console.log("Attempting to create conversation from message data");
+
+          const minimalConversation = createConversationFromMessage(message);
+
+          if (minimalConversation) {
+            const added = addConversationToStore(minimalConversation);
+            if (added) {
+              fetchSuggestedUsers();
+            }
+          } else {
+            // As a last resort, only increment suggested users refresh counter
+            // without fetching all conversations
+            fetchSuggestedUsers();
+          }
+        }
       }
     };
 
@@ -103,19 +200,55 @@ const ChatUserList = () => {
 
     socket.on("getOnlineUsers", handleOnlineUsers);
 
+    // Listen for new conversation events
+    socket.on("new_conversation", (conversation) => {
+      console.log("New conversation received:", conversation);
+
+      if (conversation && conversation._id) {
+        // Add the conversation directly to Redux
+        const added = addConversationToStore(conversation);
+
+        // If this is an incoming new conversation, may need extra handling
+        if (conversation.isIncomingNewConversation) {
+          console.log("Received incoming new conversation", conversation);
+        }
+
+        // If we successfully added a new conversation, update suggested users
+        if (added) {
+          fetchSuggestedUsers();
+        }
+      }
+    });
+
     return () => {
       socket.off("receive_message", handleReceiveMessage);
       socket.off("getOnlineUsers", handleOnlineUsers);
+      socket.off("new_conversation");
+
+      // Clear any pending timers on unmount
+      if (conversationRefreshTimerRef.current) {
+        clearTimeout(conversationRefreshTimerRef.current);
+      }
     };
-  }, [socket, dispatch]);
+  }, [
+    socket,
+    dispatch,
+    addConversationToStore,
+    hasConversation,
+    createConversationFromMessage,
+    user,
+  ]);
 
   const handleUserClick = async (userId) => {
     try {
       const response = await CheckandCreateConversation({ receiverId: userId });
       if (response.success) {
+        // Add the new conversation to Redux directly instead of fetching all
+        addConversationToStore(response.data);
+        // Set this as the selected conversation
         dispatch(setSelectedConversation(response.data));
-        // Refresh conversations list to ensure latest order
-        fetchConversations();
+        // Update suggested users list
+        fetchSuggestedUsers();
       }
     } catch (error) {
       console.error("Error creating conversation:", error);

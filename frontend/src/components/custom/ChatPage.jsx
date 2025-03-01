@@ -16,11 +16,7 @@ const ChatPage = () => {
       socket.emit("user_connected", user._id);
     }
 
-    return () => {
-      if (socket && user) {
-        socket.emit("user_disconnected", user._id);
-      }
-    };
+   
   }, [socket, user]);
 
   return (

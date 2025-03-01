@@ -8,10 +8,10 @@ import {
   Search,
   TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { logout } from "../../api/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { setAuthUser } from "../../redux/authSlice";
@@ -20,15 +20,25 @@ import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { persistor } from "@/redux/store";
-import { setIsStartChat } from "@/redux/conversationSlice";
+import { setHasUnreadMessage, setIsStartChat } from "@/redux/conversationSlice";
 import Cookies from "js-cookie";
 const LeftSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isOnChatPage = location.pathname === "/chat";
   const { user } = useSelector((store) => store.auth);
   const { likeNotification } = useSelector((store) => store.notification);
-  const { isStartChat } = useSelector((store) => store.conversation);
+  const { hasUnreadMessage } = useSelector((store) => store.conversation);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
+
+  // Clear unread message notification when on chat page
+  useEffect(() => {
+    if (isOnChatPage && hasUnreadMessage) {
+      // Reset the unread message notification when we're on the chat page
+      dispatch(setHasUnreadMessage(false));
+    }
+  }, [isOnChatPage, hasUnreadMessage, dispatch]);
 
   const logoutHandler = async () => {
     try {
@@ -64,6 +74,10 @@ const LeftSidebar = () => {
     } else if (textType === "Home") {
       navigate("/");
     } else if (textType === "Messages") {
+      // Clear unread message notification when navigating to chat
+      if (hasUnreadMessage) {
+        dispatch(setHasUnreadMessage(false));
+      }
       navigate("/chat");
     }
   };
@@ -145,6 +159,11 @@ const LeftSidebar = () => {
                         </div>
                       </PopoverContent>
                     </Popover>
+                  )}
+                {item.text === "Messages" &&
+                  hasUnreadMessage &&
+                  !isOnChatPage && (
+                    <div className="absolute w-3 h-3 bg-red-600 rounded-full bottom-6 left-6"></div>
                   )}
               </div>
             );

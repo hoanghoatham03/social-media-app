@@ -17,6 +17,19 @@ const userSocketMap = {}; // this map stores socket id corresponding the user id
 
 export const getReceiverSocketId = (receiverId) => userSocketMap[receiverId];
 
+// Helper function to broadcast online users to all clients
+const broadcastOnlineUsers = () => {
+  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+};
+
+// Helper function to notify about new conversation
+export const notifyNewConversation = (userId, conversationData) => {
+  const socketId = userSocketMap[userId];
+  if (socketId) {
+    io.to(socketId).emit("new_conversation", conversationData);
+  }
+};
+
 // Socket connection handler
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
@@ -25,25 +38,37 @@ io.on("connection", (socket) => {
   }
 
   // Emit online users to all connected clients
-  io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  broadcastOnlineUsers();
+
+  // Handle specific request for online users
+  socket.on("getOnlineUsers", () => {
+    socket.emit("getOnlineUsers", Object.keys(userSocketMap));
+  });
 
   // Handle user_connected event
   socket.on("user_connected", (userId) => {
-    userSocketMap[userId] = socket.id;
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    if (userId) {
+      userSocketMap[userId] = socket.id;
+      broadcastOnlineUsers();
+    }
   });
 
   // Handle user_disconnected event
   socket.on("user_disconnected", (userId) => {
     if (userId) {
       delete userSocketMap[userId];
+      broadcastOnlineUsers();
     }
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 
   // Handle new message event
   socket.on("send_message", (messageData) => {
     const receiverSocketId = userSocketMap[messageData.receiver];
+
+
+    const isFirstMessage =
+      messageData.isFirstMessage || messageData.isNewConversation;
+
 
     // Send message to the specific receiver if online
     if (receiverSocketId) {
@@ -52,14 +77,42 @@ io.on("connection", (socket) => {
 
     // Also send back to the sender to update their UI
     socket.emit("receive_message", messageData);
+
+    // Notify unread message to the receiver
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("notify_unread_message", messageData);
+    }
+
+    // If this is a new conversation (indicated by isNewConversation flag)
+    if (
+      (isFirstMessage || messageData.isNewConversation) &&
+      messageData.conversationDetails
+    ) {
+      // Notify both sender and receiver to add the new conversation
+      socket.emit("new_conversation", messageData.conversationDetails);
+
+      if (receiverSocketId) {
+        // For the recipient, also include a flag that this is an incoming new conversation
+        const dataForReceiver = {
+          ...messageData.conversationDetails,
+          isIncomingNewConversation: true,
+        };
+        io.to(receiverSocketId).emit("new_conversation", dataForReceiver);
+      }
+    }
   });
 
   // Handle disconnect event
   socket.on("disconnect", () => {
-    if (userId) {
-      delete userSocketMap[userId];
+    // Find which userId this socket belongs to
+    const userIdToRemove = Object.keys(userSocketMap).find(
+      (key) => userSocketMap[key] === socket.id
+    );
+
+    if (userIdToRemove) {
+      delete userSocketMap[userIdToRemove];
+      broadcastOnlineUsers();
     }
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
 
