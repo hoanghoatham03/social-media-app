@@ -6,8 +6,8 @@ import {
   MessageCircle,
   PlusSquare,
   Search,
-  TrendingUp,
 } from "lucide-react";
+import { MdOutlineExplore } from "react-icons/md";
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { toast } from "sonner";
@@ -82,28 +82,39 @@ const LeftSidebar = () => {
   };
 
   const sidebarHandler = (textType) => {
-    if (textType === "Logout") {
-      logoutHandler();
-    } else if (textType === "Create") {
-      setOpen(true);
-    } else if (textType === "Profile") {
-      navigate(`/profile/${user?._id}`);
-    } else if (textType === "Home") {
-      navigate("/");
-    } else if (textType === "Search") {
-      setSearchOpen(true);
-    } else if (textType === "Messages") {
-      // Clear unread message notification when navigating to chat
-      if (hasUnreadMessage) {
-        dispatch(setHasUnreadMessage(false));
-      }
-      navigate("/chat");
-    } else if (textType === "Notifications") {
-      // Clear unread notifications when clicking on Notifications
-      if (hasUnreadNotifications) {
+    switch (textType) {
+      case "Logout":
+        logoutHandler();
+        break;
+      case "Create":
+        setOpen(true);
+        break;
+      case "Profile":
+        navigate(`/profile/${user?._id}`);
+        break;
+      case "Home":
+        navigate("/");
+        break;
+      case "Explore":
+        navigate("/explore");
+        break;
+      case "Search":
+        setSearchOpen(true);
+          break;
+      case "Messages":
+        // Clear unread message notification when navigating to chat
+        if (hasUnreadMessage) {
+          dispatch(setHasUnreadMessage(false));
+        }
+        navigate("/chat");
+        break;
+      case "Notifications":
+        // Clear unread notifications when clicking on Notifications
+        if (hasUnreadNotifications) {
         dispatch(clearNotifications());
-      }
-      setNotificationOpen(true);
+        }
+        setNotificationOpen(true);
+        break;
     }
   };
 
@@ -115,7 +126,7 @@ const LeftSidebar = () => {
   const sidebarItems = [
     { icon: <Home />, text: "Home" },
     { icon: <Search />, text: "Search" },
-    { icon: <TrendingUp />, text: "Explore" },
+    { icon: <MdOutlineExplore className="text-2xl" />, text: "Explore" },
     { icon: <MessageCircle />, text: "Messages" },
     { icon: <Heart />, text: "Notifications" },
     { icon: <PlusSquare />, text: "Create" },

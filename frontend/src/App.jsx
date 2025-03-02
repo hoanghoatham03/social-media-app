@@ -10,6 +10,7 @@ import PrivateRoutes from "./components/custom/PrivateRoutes";
 import EditProfile from "./components/custom/EditProfile";
 import ChatPage from "./components/custom/ChatPage";
 import { SocketProvider } from "./context/SocketProvider";
+import ExplorePage from "./components/custom/ExplorePage";
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <PrivateRoutes><Home /></PrivateRoutes>,
+      },
+      {
+        path: "/explore",
+        element: <PrivateRoutes><ExplorePage /></PrivateRoutes>,
       },
       {
         path: "/profile/:id",
