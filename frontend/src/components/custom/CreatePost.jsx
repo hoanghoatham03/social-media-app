@@ -92,7 +92,7 @@ const CreatePost = ({ open, setOpen }) => {
         />
         <Button
           onClick={() => imageRef.current.click()}
-          className="w-fit mx-auto bg-[#0095F6] hover:bg-[#258bcf] "
+          className="w-fit mx-auto hover:bg-gray-800 "
         >
           Select from computer
         </Button>
@@ -106,7 +106,7 @@ const CreatePost = ({ open, setOpen }) => {
             <Button
               onClick={createPostHandler}
               type="submit"
-              className="w-full"
+              className="w-full hover:bg-gray-800"
             >
               Post
             </Button>

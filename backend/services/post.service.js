@@ -4,6 +4,22 @@ import Comment from "../models/comment.model.js";
 import cloudinary from "../utils/cloudinary.js";
 import { getReceiverSocketId, io } from "../utils/socket.js";
 
+//get posts for explore
+export const getPostsForExploreService = async (userId, page, limit) => {
+  try {
+    const skip = (page - 1) * limit;
+    const posts = await Post.find({})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("author", "_id username profilePicture");
+
+    const hasMore = posts.length === limit;
+    return { posts, hasMore };
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
 //get posts of following users
 export const getPostsOfFollowingUsersService = async (
   userId,
@@ -31,7 +47,6 @@ export const getPostsOfFollowingUsersService = async (
     const countFollowingPosts = await Post.countDocuments({
       author: { $in: followingUsers },
     });
-
 
     const countFollowingPostsPages = Math.floor(countFollowingPosts / limit);
 
@@ -67,7 +82,6 @@ export const getOtherPostsService = async (
           select: "_id username profilePicture",
         },
       });
-      
 
     if (posts.length < limit) {
       hasMoreOtherPosts = false;
@@ -110,7 +124,7 @@ export const getPostsForNewsFeedService = async (
     if (posts.length === 0 || !hasMore) {
       const result = await getOtherPostsService(
         userId,
-        page-countFollowingPostsPages,
+        page - countFollowingPostsPages,
         limit,
         followingUsers
       );

@@ -9,6 +9,7 @@ import {
   updatePost,
   deletePost,
   bookmarkPost,
+  getPostsForExplore,
 } from "../controllers/post.controller.js";
 import { upload } from "../middlewares/multer.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
@@ -25,5 +26,5 @@ router.route("/delete").post(isAuthenticated, deletePost);
 router.route("/like").post(isAuthenticated, likePost);
 router.route("/unlike").post(isAuthenticated, unlikePost);
 router.route("/bookmark").post(isAuthenticated, bookmarkPost);
-
+router.route("/explore").post(isAuthenticated, getPostsForExplore);
 export default router;

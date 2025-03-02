@@ -85,7 +85,7 @@ const EditProfile = () => {
                         </div>
                     </div>
                     <input ref={imageRef} onChange={fileChangeHandler} type='file' className='hidden' />
-                    <Button onClick={() => imageRef?.current.click()} className='bg-[#0095F6] h-8 hover:bg-[#318bc7]'>Change photo</Button>
+                    <Button onClick={() => imageRef?.current.click()} className='hover:bg-gray-800'>Change photo</Button>
                 </div>
                 <div>
                     <h1 className='font-bold text-xl mb-2'>Bio</h1>
@@ -108,12 +108,12 @@ const EditProfile = () => {
                 <div className='flex justify-end'>
                     {
                         loading ? (
-                            <Button className='w-fit bg-[#0095F6] hover:bg-[#2a8ccd]'>
+                            <Button className='w-fit hover:bg-gray-800'>
                                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                                 Please wait
                             </Button>
                         ) : (
-                            <Button onClick={editProfileHandler} className='w-fit bg-[#0095F6] hover:bg-[#2a8ccd]'>Submit</Button>
+                            <Button onClick={editProfileHandler} className='w-fit hover:bg-gray-800'>Submit</Button>
                         )
                     }
                 </div>

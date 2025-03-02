@@ -16,6 +16,8 @@ import postReducer from "./postSlice";
 import notificationReducer from "./notificationSlide";
 import conversationReducer from "./conversationSlice";
 import chatReducer from "./chatSlice";
+import exploreReducer from "./exploreSlice";
+
 const persistConfig = {
   key: "root",
   version: 1,
@@ -28,6 +30,7 @@ const rootReducer = combineReducers({
   notification: notificationReducer,
   conversation: conversationReducer,
   chat: chatReducer,
+  explore: exploreReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

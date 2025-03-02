@@ -10,8 +10,39 @@ import {
   updatePostService,
   deletePostService,
   bookmarkPostService,
+  getPostsForExploreService,
 } from "../services/post.service.js";
 import getDataUri from "../utils/datauri.js";
+
+//get posts for explore
+export const getPostsForExplore = async (req, res) => {
+  const userId = req.userId;
+  const page = req.body.page || 1;
+  const limit = req.body.limit || 5;
+
+  if (!userId) {
+    return res.status(400).json({
+      message: "User ID is required",
+      success: false,
+    });
+  }
+
+  try {
+    const { posts, hasMore } = await getPostsForExploreService(userId, page, limit);
+
+    res.status(200).json({
+      message: "Posts for explore fetched successfully",
+      success: true,
+      data: posts,
+      hasMore,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal server error",
+      success: false,
+    });
+  }
+};
 
 //get posts for news feed
 export const getPostsForNewsFeed = async (req, res) => {
