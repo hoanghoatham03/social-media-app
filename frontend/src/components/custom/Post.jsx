@@ -230,7 +230,7 @@ const Post = ({ post }) => {
           View all {post.totalComments} comments
         </span>
       )}
-      <CommentDialog open={open} setOpen={setOpen} />
+      <CommentDialog open={open} setOpen={setOpen} isFollowing={isFollowing} followHandler={followHandler} />
       <div className="flex items-center justify-between">
         <input
           type="text"

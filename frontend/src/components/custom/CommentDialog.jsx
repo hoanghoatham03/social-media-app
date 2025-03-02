@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react'
-import { Dialog, DialogContent, DialogTrigger } from '../ui/dialog'
+import { Dialog, DialogContent, DialogTrigger } from '../ui/commentDialog'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Link } from 'react-router-dom'
 import { MoreHorizontal } from 'lucide-react'
@@ -11,7 +11,7 @@ import { createComment } from '@/api/comment'
 import { toast } from 'sonner'
 import { setPosts } from '@/redux/postSlice'
 
-const CommentDialog = ({ open, setOpen }) => {
+const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
   const [text, setText] = useState("");
   const { selectedPost, posts } = useSelector(store => store.post);
   const [comment, setComment] = useState([]);
@@ -54,6 +54,7 @@ const CommentDialog = ({ open, setOpen }) => {
     }
   }
 
+  
   return (
     <Dialog open={open}>
       <DialogContent onInteractOutside={() => setOpen(false)} className="max-w-5xl p-0 flex flex-col">
@@ -85,9 +86,22 @@ const CommentDialog = ({ open, setOpen }) => {
                   <MoreHorizontal className='cursor-pointer' />
                 </DialogTrigger>
                 <DialogContent className="flex flex-col items-center text-sm text-center">
-                  <div className='cursor-pointer w-full text-[#ED4956] font-bold'>
+                  {isFollowing ? (
+
+                  <div className='cursor-pointer w-full text-[#ED4956] font-bold' onClick={() => {
+                    followHandler(selectedPost?.author?._id)
+                    setOpen(false)
+                  }}>
                     Unfollow
                   </div>
+                  ) : (
+                    <div className='cursor-pointer w-full' onClick={() => {
+                      followHandler(selectedPost?.author?._id)
+                      setOpen(false)
+                    }}>
+                      Follow
+                    </div>
+                  )}
                   <div className='cursor-pointer w-full'>
                     Add to favorites
                   </div>
