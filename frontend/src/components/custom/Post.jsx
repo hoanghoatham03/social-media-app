@@ -21,7 +21,7 @@ const Post = ({ post }) => {
   const { user } = useSelector((store) => store.auth);
   const { posts } = useSelector((store) => store.post);
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
-  const [isFollowing, setIsFollowing] = useState( false);
+  const [isFollowing, setIsFollowing] = useState(false);
   const [postLike, setPostLike] = useState(post.totalLikes);
   const [comment, setComment] = useState(post.totalComments);
   const dispatch = useDispatch();
@@ -37,8 +37,10 @@ const Post = ({ post }) => {
 
   const likeHandler = async (postId) => {
     try {
-      const res = await likePost(postId);
-      console.log("likeHandler", res);
+      const res = liked ? await unlikePost(postId) : await likePost(postId);
+
+      console.log(liked ? "unlikeHandler" : "likeHandler", res);
+
       if (res.success) {
         const updatedLikes = liked ? postLike - 1 : postLike + 1;
         setPostLike(updatedLikes);
@@ -48,67 +50,43 @@ const Post = ({ post }) => {
           if (p._id === post._id) {
             return {
               ...p,
-              likes: liked ? p.likes.filter((id) => id !== user._id) : [...p.likes, user._id],
+              likes: liked
+                ? p.likes.filter((id) => id !== user._id)
+                : [...p.likes, user._id],
               totalLikes: updatedLikes,
             };
           }
           return p;
         });
         dispatch(setPosts(updatedPostData));
-        toast.success("Post liked successfully");
       }
     } catch (error) {
       console.log(error);
+      toast.error(`Failed to ${liked ? "unlike" : "like"} post`);
     }
   };
 
-  const dislikeHandler = async () => {
-    try {
-      const res = await unlikePost(post._id);
-      console.log("dislikeHandler", res);
-      if (res.success) {
-        const updatedLikes = liked ? postLike - 1 : postLike + 1;
-        setPostLike(updatedLikes);
-        setLiked(!liked);
-
-        const updatedPostData = posts.map((p) => {
-          if (p._id === post._id) {
-            return {
-              ...p,
-              likes: p.likes.filter((id) => id !== user._id) ,
-              totalLikes: updatedLikes,
-            };
-          }
-          return p;
-        });
-        dispatch(setPosts(updatedPostData));
-        toast.success("Post disliked successfully");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
   const commentHandler = async () => {
     try {
       const res = await createComment(post._id, text);
       console.log("commentHandler", res);
       if (res.success) {
-          const updatedCommentData = [...comment, res.data];
-          console.log("updatedCommentData", updatedCommentData);
-          setComment(updatedCommentData);
+        const updatedCommentData = [...comment, res.data];
+        console.log("updatedCommentData", updatedCommentData);
+        setComment(updatedCommentData);
 
-          const updatedPostData = posts.map(p =>
-              p._id === post._id ? { ...p, comments: updatedCommentData } : p
-          );
+        const updatedPostData = posts.map((p) =>
+          p._id === post._id ? { ...p, comments: updatedCommentData } : p
+        );
 
-          dispatch(setPosts(updatedPostData));
-          toast.success("Comment added successfully");
-          setText("");
+        dispatch(setPosts(updatedPostData));
+        toast.success("Comment added successfully");
+        setText("");
       }
-  } catch (error) {
+    } catch (error) {
       console.log(error);
-  }
-}
+    }
+  };
 
   const deletePostHandler = () => {
     console.log("deletePostHandler");
@@ -169,9 +147,9 @@ const Post = ({ post }) => {
           <DialogTrigger asChild onClick={() => checkFollow(post?.author?._id)}>
             <MoreHorizontal className="cursor-pointer" />
           </DialogTrigger>
-          <DialogContent className="flex flex-col items-center text-sm text-center" >
-            {post?.author?._id !== user?._id && (
-              isFollowing ? (
+          <DialogContent className="flex flex-col items-center text-sm text-center">
+            {post?.author?._id !== user?._id &&
+              (isFollowing ? (
                 <Button
                   onClick={() => followHandler(post?.author?._id)}
                   variant="ghost"
@@ -187,8 +165,7 @@ const Post = ({ post }) => {
                 >
                   Follow
                 </Button>
-              )
-            )}
+              ))}
 
             <Button variant="ghost" className="cursor-pointer w-fit">
               Add to favorites
@@ -215,7 +192,7 @@ const Post = ({ post }) => {
         <div className="flex items-center gap-3">
           {liked ? (
             <FaHeart
-              onClick={() => dislikeHandler(post._id)}
+              onClick={() => likeHandler(post._id)}
               size={"22px"}
               className="cursor-pointer text-red-600"
             />
