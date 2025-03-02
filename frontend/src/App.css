@@ -3,3 +3,26 @@
   padding: 0;
   box-sizing: border-box;
 }
+/* always show scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #aaaaaa;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aaaaaa;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #aaaaaa;
+}
+
+::-webkit-scrollbar-thumb:focus {
+  background: #aaaaaa;
+}

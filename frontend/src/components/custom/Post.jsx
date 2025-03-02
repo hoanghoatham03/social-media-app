@@ -9,21 +9,25 @@ import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { MessageCircle, Send, Bookmark } from "lucide-react";
 import { Badge } from "../ui/badge";
 import CommentDialog from "./CommentDialog";
-import { likePost, unlikePost } from "@/api/post";
+import { likePost, unlikePost, bookmarkPost } from "@/api/post";
 import { followUser, getUserProfile } from "@/api/user";
 import { createComment } from "@/api/comment";
 import { setPosts, setSelectedPost } from "@/redux/postSlice";
+import { setBookmarkedPosts } from "@/redux/authSlice";
 import { toast } from "sonner";
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
-  const { user } = useSelector((store) => store.auth);
+  const { user, bookmarkedPosts = [] } = useSelector((store) => store.auth);
   const { posts } = useSelector((store) => store.post);
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [postLike, setPostLike] = useState(post.totalLikes);
   const [comment, setComment] = useState(post.totalComments);
+  const [isBookmarked, setIsBookmarked] = useState(
+    user?.bookmarks?.includes(post._id) || false
+  );
   const dispatch = useDispatch();
 
   const changeEventHandler = (e) => {
@@ -92,8 +96,36 @@ const Post = ({ post }) => {
     console.log("deletePostHandler");
   };
 
-  const bookmarkHandler = () => {
-    console.log("bookmarkHandler");
+  const bookmarkHandler = async () => {
+    try {
+      const res = await bookmarkPost(post._id);
+      if (res.success) {
+        setIsBookmarked(!isBookmarked);
+
+        // Ensure bookmarkedPosts is treated as an array
+        const currentBookmarks = Array.isArray(bookmarkedPosts)
+          ? bookmarkedPosts
+          : [];
+
+        // If we're bookmarking, add the post ID to bookmarks
+        if (!isBookmarked) {
+          dispatch(setBookmarkedPosts([...currentBookmarks, post]));
+          toast.success("Post bookmarked successfully");
+        } else {
+          // If we're unbookmarking, remove the post ID from bookmarks
+          dispatch(
+            setBookmarkedPosts(
+              currentBookmarks.filter((bookmark) => bookmark._id !== post._id)
+            )
+          );
+          toast.success("Post unbookmarked successfully");
+        }
+
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to bookmark post");
+    }
   };
 
   const checkFollow = async (userId) => {
@@ -209,10 +241,18 @@ const Post = ({ post }) => {
           />
           <Send className="cursor-pointer hover:text-gray-600" />
         </div>
-        <Bookmark
-          onClick={bookmarkHandler}
-          className="cursor-pointer hover:text-gray-600"
-        />
+        {isBookmarked ? (
+          <Bookmark
+            onClick={bookmarkHandler}
+            className="cursor-pointer text-black"
+            fill="black"
+          />
+        ) : (
+          <Bookmark
+            onClick={bookmarkHandler}
+            className="cursor-pointer  hover:text-gray-600"
+          />
+        )}
       </div>
       <span className="font-medium block mb-2">{postLike} likes</span>
       <p>
@@ -230,7 +270,12 @@ const Post = ({ post }) => {
           View all {post.totalComments} comments
         </span>
       )}
-      <CommentDialog open={open} setOpen={setOpen} isFollowing={isFollowing} followHandler={followHandler} />
+      <CommentDialog
+        open={open}
+        setOpen={setOpen}
+        isFollowing={isFollowing}
+        followHandler={followHandler}
+      />
       <div className="flex items-center justify-between">
         <input
           type="text"
@@ -250,7 +295,6 @@ const Post = ({ post }) => {
       </div>
       <div className="h-[1px] bg-gray-200 my-2"></div>
     </div>
-    
   );
 };
 
