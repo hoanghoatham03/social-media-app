@@ -9,6 +9,7 @@ import {
   register,
   updateUserProfile,
   refreshAccessToken,
+  searchUser,
 } from "../controllers/user.controller.js";
 import { getPostOfUser } from "../controllers/post.controller.js";
 import { isAuthenticated } from "../middlewares/isAuthenticated.js";
@@ -30,6 +31,6 @@ router
 router.route("/suggest/follow").get(isAuthenticated, getSuggestFollowUser);
 router.route("/suggest/chat").get(isAuthenticated, getSuggestChatUser);
 router.route("/follow/:followId").post(isAuthenticated, followUser);
-
+router.route("/search").get(isAuthenticated, searchUser);
 
 export default router;

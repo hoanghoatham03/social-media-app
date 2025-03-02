@@ -10,6 +10,7 @@ import {
   refreshAccessTokenService,
   logoutService,
   getSuggestChatUserService,
+  searchUserService,
 } from "../services/user.service.js";
 
 // Register a new user
@@ -217,6 +218,24 @@ export const getSuggestChatUser = async (req, res) => {
       success: true,
       data: {
         suggestedChatUsers,
+      },
+    });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+//search user
+export const searchUser = async (req, res) => {
+  const { username } = req.query;
+
+  try {
+    const users = await searchUserService(username);
+    res.status(200).json({
+      message: "Users fetched successfully",
+      success: true,
+      data: {
+        users,
       },
     });
   } catch (error) {

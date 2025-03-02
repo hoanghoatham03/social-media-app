@@ -268,3 +268,15 @@ export const getSuggestChatUserService = async (userId) => {
     throw new Error(error.message);
   }
 };
+
+//search user
+export const searchUserService = async (username) => {
+  try {
+    const users = await User.find({ username: { $regex: username, $options: "i" } });
+    return users;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+

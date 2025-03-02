@@ -16,6 +16,7 @@ import { logout } from "../../api/auth";
 import { useDispatch, useSelector } from "react-redux";
 import { setAuthUser } from "../../redux/authSlice";
 import CreatePost from "./CreatePost";
+import SearchDialog from "./SearchDialog";
 import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
@@ -38,6 +39,7 @@ const LeftSidebar = () => {
   const { hasUnreadMessage } = useSelector((store) => store.conversation);
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
 
   // Clear unread message notification when on chat page
@@ -88,6 +90,8 @@ const LeftSidebar = () => {
       navigate(`/profile/${user?._id}`);
     } else if (textType === "Home") {
       navigate("/");
+    } else if (textType === "Search") {
+      setSearchOpen(true);
     } else if (textType === "Messages") {
       // Clear unread message notification when navigating to chat
       if (hasUnreadMessage) {
@@ -218,6 +222,7 @@ const LeftSidebar = () => {
       </div>
 
       <CreatePost open={open} setOpen={setOpen} />
+      <SearchDialog open={searchOpen} setOpen={setSearchOpen} />
     </div>
   );
 };

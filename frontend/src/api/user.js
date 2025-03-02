@@ -46,5 +46,14 @@ export const followUser = async (followId) => {
   }
 };
 
-
-
+export const searchUser = async (username) => {
+  try {
+    const response = await axiosInstance.get(
+      `/user/search?username=${username}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error searching users:", error);
+    throw error;
+  }
+};
