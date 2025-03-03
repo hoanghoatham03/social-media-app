@@ -7,6 +7,7 @@ import { login } from "../../api/auth";
 import { Loader2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { setAuthUser } from "../../redux/authSlice";
+import { Instagram } from "lucide-react";
 
 const Login = () => {
   const [input, setInput] = useState({
@@ -59,10 +60,12 @@ const Login = () => {
     <div className="flex items-center w-screen h-screen justify-center">
       <form
         onSubmit={signupHandler}
-        className="shadow-lg flex flex-col gap-5 p-8"
+        className="shadow-2xl flex flex-col gap-5 p-8 rounded-lg"
       >
         <div className="my-4">
-          <h1 className="text-center font-bold text-xl">LOGO</h1>
+          <h1 className="text-center font-bold text-xl flex items-center justify-center gap-2 text-gray-700 mb-2">
+            <Instagram className="w-6 h-6" /> Instagram
+          </h1>
           <p className="text-sm text-center">
             Login to see photos & videos from your friends
           </p>
@@ -98,7 +101,7 @@ const Login = () => {
 
         <span className="text-center">
           Don&apos;t have an account?{" "}
-          <Link to="/signup" className="text-blue-600">
+          <Link to="/signup" className="text-gray-700 font-bold">
             Signup
           </Link>
         </span>

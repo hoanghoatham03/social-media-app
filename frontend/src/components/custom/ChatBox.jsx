@@ -13,6 +13,7 @@ import {
 } from "@/redux/conversationSlice";
 import { useSocket } from "@/context/SocketProvider";
 import { getInitials, formatDate } from "@/utils/utils";
+import { Loader2 } from "lucide-react";
 
 // Helper function to generate a guaranteed unique ID
 const generateUniqueId = () => {
@@ -331,7 +332,7 @@ const ChatBox = () => {
       <div className="flex-1 p-4 overflow-y-auto">
         {loading ? (
           <div className="flex justify-center items-center h-full">
-            <p>Loading messages...</p>
+            <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : !Array.isArray(messages) || messages.length === 0 ? (
           <div className="flex justify-center items-center h-full text-gray-500">

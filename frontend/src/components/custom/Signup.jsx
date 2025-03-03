@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { register } from "../../api/auth";
 import { useNavigate, Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { Instagram } from "lucide-react";
 
 const Signup = () => {
   const [input, setInput] = useState({
@@ -50,10 +51,12 @@ const Signup = () => {
     <div className="flex items-center w-screen h-screen justify-center">
       <form
         onSubmit={signupHandler}
-        className="shadow-lg flex flex-col gap-5 p-8"
+        className="shadow-2xl flex flex-col gap-5 p-8 rounded-lg"
       >
         <div className="my-4">
-          <h1 className="text-center font-bold text-xl">LOGO</h1>
+          <h1 className="text-center font-bold text-xl flex items-center justify-center gap-2 text-gray-700 mb-2">
+            <Instagram className="w-6 h-6" /> Instagram
+          </h1>
           <p className="text-sm text-center">
             Signup to see photos & videos from your friends
           </p>
@@ -99,7 +102,7 @@ const Signup = () => {
 
         <span className="text-center">
           Already have an account?{" "}
-          <Link to="/login" className="text-blue-600">
+          <Link to="/login" className="text-gray-700 font-bold">
             Login
           </Link>{" "}
         </span>

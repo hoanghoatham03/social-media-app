@@ -83,9 +83,10 @@ export const login = async (req, res) => {
 
 //refresh the access token
 export const refreshAccessToken = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
-  if (!refreshToken) {
-    return res.status(405).json({
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(405).json({
       message: "Don't have refresh token",
       success: false,
     });
@@ -98,6 +99,12 @@ export const refreshAccessToken = async (req, res) => {
       accessToken,
     },
   });
+  } catch (error) {
+    res.status(405).json({
+      message: error.message,
+      success: false,
+    });
+  }
 };
 
 //logout the user

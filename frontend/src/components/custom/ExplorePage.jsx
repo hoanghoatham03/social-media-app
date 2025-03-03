@@ -98,7 +98,7 @@ const ExplorePage = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 pr-2">
+    <div className="container mx-auto py-8 px-2">
       {posts.length === 0 && !initialLoading ? (
         <div className="text-center py-10">
           <p className="text-gray-500">No posts available to explore.</p>
