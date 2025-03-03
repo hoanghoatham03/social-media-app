@@ -16,6 +16,8 @@ import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { setBookmarkedPosts } from "@/redux/authSlice";
 import { toast } from "sonner";
 import { formatDate } from "@/utils/formatDate";
+import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
@@ -30,7 +32,9 @@ const Post = ({ post }) => {
   const [isBookmarked, setIsBookmarked] = useState(
     bookmarkedPosts.some((bookmark) => bookmark._id === post._id)
   );
+  const [isDeleting, setIsDeleting] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const changeEventHandler = (e) => {
     const inputText = e.target.value;
@@ -104,15 +108,19 @@ const Post = ({ post }) => {
 
   const deletePostHandler = async () => {
     try {
+      setIsDeleting(true);
       const res = await deletePost(post._id);
       if (res.success) {
         toast.success("Post deleted successfully");
         dispatch(setPosts(posts.filter((p) => p._id !== post._id)));
+        navigate("/");
       }
     } catch (error) {
       console.log(error);
       toast.error("Failed to delete post");
-    }
+    } finally {
+      setIsDeleting(false);
+    } 
   };
 
   const bookmarkHandler = async () => {
@@ -230,7 +238,11 @@ const Post = ({ post }) => {
                 variant="ghost"
                 className="cursor-pointer w-fit"
               >
-                Delete
+                {isDeleting ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <span className="text-red-600">Delete</span>
+                )}
               </Button>
             )}
           </DialogContent>
