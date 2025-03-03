@@ -146,18 +146,18 @@ export const likeCommentService = async (commentId, userId) => {
     }
 
     //get author of the comment
-    const authorId = comment.userId;
+    const authorId = comment.userId.toString();
     const receiverSocketId = getReceiverSocketId(authorId);
 
     //send notification to user
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("getNotification", {
+    if (authorId !== userId) {
+      io.to(receiverSocketId).emit("commentNotification", {
         user: user._id,
         userInfo: {
           username: user.username,
           profilePicture: user.profilePicture,
         },
-        type: "like",
+        type: "likeComment",
         postId: comment.postId,
         commentId: comment._id,
         message: `${user.username} liked your comment`,
@@ -199,14 +199,14 @@ export const createReplyCommentService = async (commentId, desc, userId) => {
     const receiverSocketId = getReceiverSocketId(authorId);
 
     //send notification to user
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("getNotification", {
+    if (receiverSocketId && authorId !== userId) {
+      io.to(receiverSocketId).emit("commentNotification", {
         user: userId,
         userInfo: {
           username: user.username,
           profilePicture: user.profilePicture,
         },
-        type: "reply",
+        type: "replyComment",
         postId: comment.postId,
         commentId: comment._id,
         replyCommentId: replyComment._id,
@@ -315,7 +315,7 @@ export const likeReplyCommentService = async (replyId, userId) => {
     const receiverSocketId = getReceiverSocketId(authorId);
 
     //send notification to user
-    if (receiverSocketId) {
+    if (authorId !== userId) {
       io.to(receiverSocketId).emit("getNotification", {
         user: userId,
         userInfo: {

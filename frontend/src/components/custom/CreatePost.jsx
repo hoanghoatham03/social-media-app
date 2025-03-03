@@ -42,7 +42,7 @@ const CreatePost = ({ open, setOpen }) => {
       setLoading(true);
       const res = await createPost(formData);
       if (res.success) {
-        dispatch(setPosts([res.data, ...posts])); // [1] -> [1,2] -> total element = 2
+        dispatch(setPosts([res.data, ...posts])); 
         toast.success("Post created successfully");
         setDesc("");
         setFile("");
@@ -75,7 +75,7 @@ const CreatePost = ({ open, setOpen }) => {
 
         <div className="flex gap-3 items-center">
           <Avatar>
-            <AvatarImage src={user?.profilePicture} alt="img" />
+            <AvatarImage src={user?.profilePicture?.url} alt="img" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <div>

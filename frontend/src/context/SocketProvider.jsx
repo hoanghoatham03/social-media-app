@@ -127,6 +127,31 @@ export const SocketProvider = ({ children }) => {
       }
     });
 
+    //listen for comment notification
+    socketInstance.on("commentNotification", (notification) => {
+      console.log("Comment notification received:", notification);
+      // Add to Redux store
+      dispatch(addNotification(notification));
+
+      // Show toast notification
+      toast(
+        <div className="flex items-center gap-2">
+          <img
+            src={notification.userInfo?.profilePicture?.url || "https://res.cloudinary.com/dkqxladop/image/upload/v1740154423/rd3twsr2e5oaafwtmgzv.png"}
+            alt="User avatar"
+            className="w-8 h-8 rounded-full object-cover"
+          />
+          <span>
+            <span className="font-bold">
+              {notification.userInfo?.username}
+            </span>{" "}
+            {notification.type === "likeComment" ? "liked" : "replied"} to your comment
+          </span>
+        </div>
+      );
+    });
+
+
     // Request online users immediately after connection
     socketInstance.on("connect", () => {
       socketInstance.emit("getOnlineUsers");

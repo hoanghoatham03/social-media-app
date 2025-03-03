@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.route("/:postId").post(isAuthenticated, createComment);
 router.route("/:postId").get(isAuthenticated, getCommentsOfPost);
-router.route("/like").post(isAuthenticated, likeComment);
+router.route("/like/:commentId").post(isAuthenticated, likeComment);
 router.route("/reply").post(isAuthenticated, createReplyComment);
 router.route("/replies/:commentId").get(isAuthenticated, getReplies);
 router.route("/like-reply").post(isAuthenticated, likeReplyComment);

@@ -66,7 +66,7 @@ export const getCommentsOfPost = async (req, res) => {
 
 //like comment
 export const likeComment = async (req, res) => {
-  const { commentId } = req.body;
+  const { commentId } = req.params;
   const userId = req.userId;
 
   try {

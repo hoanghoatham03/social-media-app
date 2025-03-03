@@ -208,7 +208,10 @@ const LeftSidebar = () => {
                                       {notification.userDetails?.username ||
                                         notification.userInfo?.username}
                                     </span>{" "}
-                                    {notification.type === "like" ? "liked" : "commented on"} your post
+                                    {notification.type === "like" && "liked your post"}
+                                    {notification.type === "comment" && "commented on your post"}
+                                    {notification.type === "likeComment" && "liked your comment"}
+                                    {notification.type === "replyComment" && "replied to your comment"}
                                   </p>
                                 </div>
                               );

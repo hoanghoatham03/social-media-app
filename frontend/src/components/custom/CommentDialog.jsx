@@ -76,8 +76,8 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
                   </Avatar>
                 </Link>
                 <div>
-                  <Link className='font-semibold text-xs'>{selectedPost?.author?.username}</Link>
-                  {/* <span className='text-gray-600 text-sm'>Bio here...</span> */}
+                  <Link className='font-semibold text-sm'>{selectedPost?.author?.username}</Link>
+                  
                 </div>
               </div>
 
@@ -109,6 +109,23 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
               </Dialog>
             </div>
             <hr />
+            <div className='p-4 flex flex-col gap-2'>
+            <div className='flex gap-3 items-center'>
+                <Link>
+                  <Avatar>
+                    <AvatarImage src={selectedPost?.author?.profilePicture?.url} />
+                    <AvatarFallback>CN</AvatarFallback>
+                  </Avatar>
+                </Link>
+                <div>
+                  <Link className='font-semibold text-sm'>{selectedPost?.author?.username}</Link>
+                  
+                </div>
+              </div>
+                <div>
+                  <span className='text-gray-600 text-sm'>{selectedPost?.desc}</span>
+                </div>
+            </div>
             <div className='flex-1 overflow-y-auto max-h-96 p-4'>
               {
                 comment.map((comment) => <Comment key={comment._id} comment={comment} />)

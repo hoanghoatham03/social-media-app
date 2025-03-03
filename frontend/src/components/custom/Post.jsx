@@ -9,12 +9,13 @@ import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { MessageCircle, Send, Bookmark, CornerDownLeft } from "lucide-react";
 import { Badge } from "../ui/badge";
 import CommentDialog from "./CommentDialog";
-import { likePost, unlikePost, bookmarkPost } from "@/api/post";
+import { likePost, unlikePost, bookmarkPost, deletePost } from "@/api/post";
 import { followUser, getUserProfile } from "@/api/user";
 import { createComment } from "@/api/comment";
 import { setPosts, setSelectedPost } from "@/redux/postSlice";
 import { setBookmarkedPosts } from "@/redux/authSlice";
 import { toast } from "sonner";
+import { formatDate } from "@/utils/formatDate";
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
@@ -25,6 +26,7 @@ const Post = ({ post }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [postLike, setPostLike] = useState(post.totalLikes);
   const [comment, setComment] = useState(post.comments);
+  const [isMore, setIsMore] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(
     bookmarkedPosts.some((bookmark) => bookmark._id === post._id)
   );
@@ -75,12 +77,18 @@ const Post = ({ post }) => {
       const res = await createComment(post._id, text);
       console.log("commentHandler", res);
       if (res.success) {
-        const updatedCommentData = [...comment, res.data];
+        const updatedCommentData = [...post.comments, res.data];
         console.log("updatedCommentData", updatedCommentData);
         setComment(updatedCommentData);
 
         const updatedPostData = posts.map((p) =>
-          p._id === post._id ? { ...p, comments: updatedCommentData, totalComments: updatedCommentData.length } : p
+          p._id === post._id
+            ? {
+                ...p,
+                comments: updatedCommentData,
+                totalComments: updatedCommentData.length,
+              }
+            : p
         );
 
         dispatch(setPosts(updatedPostData));
@@ -94,8 +102,17 @@ const Post = ({ post }) => {
     }
   };
 
-  const deletePostHandler = () => {
-    console.log("deletePostHandler");
+  const deletePostHandler = async () => {
+    try {
+      const res = await deletePost(post._id);
+      if (res.success) {
+        toast.success("Post deleted successfully");
+        dispatch(setPosts(posts.filter((p) => p._id !== post._id)));
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to delete post");
+    }
   };
 
   const bookmarkHandler = async () => {
@@ -154,6 +171,8 @@ const Post = ({ post }) => {
     }
   };
 
+   
+
   return (
     <div className="my-8 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between">
@@ -166,7 +185,13 @@ const Post = ({ post }) => {
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
           <div className="flex items-center gap-3 font-medium">
-            <h1>{post.author?.username}</h1>
+            <h1>
+              {post.author?.username}{" "}
+              <span className="text-gray-400 text-sm">•</span>{" "}
+              <span className="text-gray-400 text-sm">
+                {formatDate(post.createdAt)}
+              </span>
+            </h1>
             {user?._id === post.author._id && (
               <Badge variant="secondary">Author</Badge>
             )}
@@ -254,7 +279,19 @@ const Post = ({ post }) => {
       <span className="font-medium block mb-2">{postLike} likes</span>
       <p>
         <span className="font-medium mr-2">{post.author?.username}</span>
-        {post.desc}
+        {post.desc.length > 100 ? (
+          <span>
+            {isMore ? post.desc : post.desc.slice(0, 100) + "..."}{" "}
+            <span
+              className="cursor-pointer text-sm text-gray-400"
+              onClick={() => setIsMore(!isMore)}
+            >
+              {isMore ? "Read less" : "Read more"}
+            </span>
+          </span>
+        ) : (
+          <span>{post.desc}</span>
+        )}
       </p>
       {post.totalComments > 0 && (
         <span
@@ -283,7 +320,8 @@ const Post = ({ post }) => {
         />
         {text && (
           <>
-            <CornerDownLeft size={18}
+            <CornerDownLeft
+              size={18}
               onClick={commentHandler}
               className=" cursor-pointer"
             />
