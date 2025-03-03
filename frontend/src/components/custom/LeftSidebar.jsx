@@ -24,7 +24,7 @@ import { persistor } from "@/redux/store";
 import { setHasUnreadMessage, setIsStartChat } from "@/redux/conversationSlice";
 import {
   clearNotifications,
-  clearLikeNotifications,
+  clearLikeAndCommentNotifications,
 } from "../../redux/notificationSlide";
 
 import Cookies from "js-cookie";
@@ -33,7 +33,7 @@ const LeftSidebar = () => {
   const location = useLocation();
   const isOnChatPage = location.pathname === "/chat";
   const { user } = useSelector((store) => store.auth);
-  const { likeNotification, hasUnreadNotifications } = useSelector(
+  const { likeAndCommentNotification, hasUnreadNotifications } = useSelector(
     (store) => store.notification
   );
   const { hasUnreadMessage } = useSelector((store) => store.conversation);
@@ -84,6 +84,7 @@ const LeftSidebar = () => {
   const sidebarHandler = (textType) => {
     switch (textType) {
       case "Logout":
+        localStorage.setItem("isLoggedIn", false);
         logoutHandler();
         break;
       case "Create":
@@ -119,7 +120,7 @@ const LeftSidebar = () => {
   };
 
   const handleClearNotifications = () => {
-    dispatch(clearLikeNotifications());
+    dispatch(clearLikeAndCommentNotifications());
     toast.success("All notifications cleared");
   };
 
@@ -170,7 +171,7 @@ const LeftSidebar = () => {
                         <div>
                           <div className="flex justify-between items-center mb-3">
                             <h3 className="font-semibold">Notifications</h3>
-                            {likeNotification.length > 0 && (
+                            {likeAndCommentNotification?.length > 0 && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -182,10 +183,10 @@ const LeftSidebar = () => {
                             )}
                           </div>
 
-                          {likeNotification.length === 0 ? (
+                          {likeAndCommentNotification?.length === 0 ? (
                             <p>No new notification</p>
                           ) : (
-                            likeNotification.map((notification, idx) => {
+                            likeAndCommentNotification?.map((notification, idx) => {
                               return (
                                 <div
                                   key={`${notification.userId}-${idx}`}
@@ -207,7 +208,7 @@ const LeftSidebar = () => {
                                       {notification.userDetails?.username ||
                                         notification.userInfo?.username}
                                     </span>{" "}
-                                    liked your post
+                                    {notification.type === "like" ? "liked" : "commented on"} your post
                                   </p>
                                 </div>
                               );

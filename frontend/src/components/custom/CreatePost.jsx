@@ -1,10 +1,15 @@
 import { useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogClose } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+} from "../ui/commentDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { readFileAsDataURL } from "@/utils/fileReader";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
+
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { setPosts } from "@/redux/postSlice";
@@ -37,7 +42,6 @@ const CreatePost = ({ open, setOpen }) => {
       setLoading(true);
       const res = await createPost(formData);
       if (res.success) {
-        
         dispatch(setPosts([res.data, ...posts])); // [1] -> [1,2] -> total element = 2
         toast.success("Post created successfully");
         setDesc("");
@@ -55,10 +59,20 @@ const CreatePost = ({ open, setOpen }) => {
   return (
     <Dialog open={open}>
       <DialogContent onInteractOutside={() => setOpen(false)}>
+        <Button
+          variant="ghost"
+          className="absolute top-2 right-2 out"
+          onClick={() => setOpen(false)}
+          size="icon"
+
+        >
+          <X />
+        </Button>
+
         <DialogHeader className="text-center font-semibold">
           Create New Post
         </DialogHeader>
-        
+
         <div className="flex gap-3 items-center">
           <Avatar>
             <AvatarImage src={user?.profilePicture} alt="img" />

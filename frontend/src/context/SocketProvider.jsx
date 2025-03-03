@@ -80,7 +80,7 @@ export const SocketProvider = ({ children }) => {
       dispatch(setHasUnreadMessage(true));
     });
 
-    // Listen for new like notifications
+    // Listen for new like and comment notifications
     socketInstance.on("newNotification", (notification) => {
       console.log("New notification received:", notification);
 
@@ -101,6 +101,26 @@ export const SocketProvider = ({ children }) => {
                 {notification.userInfo?.username}
               </span>{" "}
               liked your post
+            </span>
+          </div>
+        );
+      } else if (notification.type === "comment") {
+        // Add to Redux store
+        dispatch(addNotification(notification));
+
+        // Show toast notification
+        toast(
+          <div className="flex items-center gap-2">
+            <img
+              src={notification.userInfo?.profilePicture?.url || "https://res.cloudinary.com/dkqxladop/image/upload/v1740154423/rd3twsr2e5oaafwtmgzv.png"}
+              alt="User avatar"
+              className="w-8 h-8 rounded-full object-cover"
+            />
+            <span>
+              <span className="font-bold">
+                {notification.userInfo?.username}
+              </span>{" "}
+              commented on your post
             </span>
           </div>
         );

@@ -294,6 +294,7 @@ export const likePostService = async (postId, userId) => {
         postId,
         message: `${user.username} liked your post`,
       };
+  
       io.to(receiverSocketId).emit("newNotification", notification);
     }
 
@@ -332,14 +333,14 @@ export const bookmarkPostService = async (postId, userId) => {
     const user = await User.findById(userId);
 
     //check if user already bookmarked the post
-    const isBookmarked = user.bookmarks.includes(postId);
+    const isBookmarked = user.bookmarks.some((bookmark) => bookmark._id === post._id);
 
     if (isBookmarked) {
-      await User.findByIdAndUpdate(userId, { $pull: { bookmarks: postId } });
+      await User.findByIdAndUpdate(userId, { $pull: { bookmarks: post } });
       return "Post unbookmarked successfully";
     }
 
-    await User.findByIdAndUpdate(userId, { $addToSet: { bookmarks: postId } });
+    await User.findByIdAndUpdate(userId, { $addToSet: { bookmarks: post } });
     return "Post bookmarked successfully";
   } catch (error) {
     throw new Error(error.message);

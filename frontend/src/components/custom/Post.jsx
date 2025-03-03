@@ -6,7 +6,7 @@ import { useSelector } from "react-redux";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
-import { MessageCircle, Send, Bookmark } from "lucide-react";
+import { MessageCircle, Send, Bookmark, CornerDownLeft } from "lucide-react";
 import { Badge } from "../ui/badge";
 import CommentDialog from "./CommentDialog";
 import { likePost, unlikePost, bookmarkPost } from "@/api/post";
@@ -24,9 +24,9 @@ const Post = ({ post }) => {
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [postLike, setPostLike] = useState(post.totalLikes);
-  const [comment, setComment] = useState(post.totalComments);
+  const [comment, setComment] = useState(post.comments);
   const [isBookmarked, setIsBookmarked] = useState(
-    user?.bookmarks?.includes(post._id) || false
+    bookmarkedPosts.some((bookmark) => bookmark._id === post._id)
   );
   const dispatch = useDispatch();
 
@@ -80,10 +80,12 @@ const Post = ({ post }) => {
         setComment(updatedCommentData);
 
         const updatedPostData = posts.map((p) =>
-          p._id === post._id ? { ...p, comments: updatedCommentData } : p
+          p._id === post._id ? { ...p, comments: updatedCommentData, totalComments: updatedCommentData.length } : p
         );
 
         dispatch(setPosts(updatedPostData));
+        console.log("updatedPostData", updatedPostData);
+
         toast.success("Comment added successfully");
         setText("");
       }
@@ -102,25 +104,20 @@ const Post = ({ post }) => {
       if (res.success) {
         setIsBookmarked(!isBookmarked);
 
-        // Ensure bookmarkedPosts is treated as an array
-        const currentBookmarks = Array.isArray(bookmarkedPosts)
-          ? bookmarkedPosts
-          : [];
-
         // If we're bookmarking, add the post ID to bookmarks
         if (!isBookmarked) {
-          dispatch(setBookmarkedPosts([...currentBookmarks, post]));
+          dispatch(setBookmarkedPosts([...bookmarkedPosts, post]));
+          console.log("bookmarkedPosts", bookmarkedPosts);
           toast.success("Post bookmarked successfully");
         } else {
           // If we're unbookmarking, remove the post ID from bookmarks
           dispatch(
             setBookmarkedPosts(
-              currentBookmarks.filter((bookmark) => bookmark._id !== post._id)
+              bookmarkedPosts.filter((bookmark) => bookmark._id !== post._id)
             )
           );
           toast.success("Post unbookmarked successfully");
         }
-
       }
     } catch (error) {
       console.log(error);
@@ -285,12 +282,12 @@ const Post = ({ post }) => {
           className="outline-none text-sm w-full"
         />
         {text && (
-          <span
-            onClick={commentHandler}
-            className="text-[#3BADF8] cursor-pointer"
-          >
-            Post
-          </span>
+          <>
+            <CornerDownLeft size={18}
+              onClick={commentHandler}
+              className=" cursor-pointer"
+            />
+          </>
         )}
       </div>
       <div className="h-[1px] bg-gray-200 my-2"></div>
