@@ -6,7 +6,10 @@ import { getPostsForExplore } from "@/api/post";
 import { setPosts, setPage, setHasMore } from "@/redux/exploreSlice";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { Heart, MessageCircle } from "lucide-react";
-
+import { getPostById } from "@/api/post";
+import { setSelectedPost } from "@/redux/postSlice";
+import CommentDialog from "./CommentDialog";
+import { followUser, getUserProfile } from "@/api/user";
 
 const POSTS_PER_PAGE = 15;
 
@@ -14,6 +17,9 @@ const ExplorePage = () => {
   const dispatch = useDispatch();
   const { posts, page, hasMore } = useSelector((store) => store.explore);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const { user } = useSelector((store) => store.auth);
 
   const fetchExplorePosts = async () => {
     setInitialLoading(true);
@@ -35,6 +41,35 @@ const ExplorePage = () => {
       toast.error("Something went wrong fetching posts");
     } finally {
       setInitialLoading(false);
+    }
+  };
+
+  const checkFollow = async (userId) => {
+    try {
+      const res = await getUserProfile(userId);
+      if (res.success) {
+        const isFollowing = res.data.user.followers.includes(user?._id);
+        if (isFollowing) {
+          setIsFollowing(true);
+        } else {
+          setIsFollowing(false);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const followHandler = async (userId) => {
+    try {
+      const res = await followUser(userId);
+      if (res.success) {
+        setIsFollowing(!isFollowing);
+      }
+      toast.success(res.message);
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to follow");
     }
   };
 
@@ -97,6 +132,20 @@ const ExplorePage = () => {
     );
   }
 
+  const handleFindPost = async (postId) => {
+    try {
+      const res = await getPostById(postId);
+
+      if (res.success) {
+        checkFollow(res.data.author._id);
+        dispatch(setSelectedPost(res.data));
+        setOpen(true);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to find post");
+    }
+  };
   return (
     <div className="container mx-auto py-8 px-2">
       {posts.length === 0 && !initialLoading ? (
@@ -106,7 +155,11 @@ const ExplorePage = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {posts.map((post) => (
-            <div key={post?._id} className="relative group cursor-pointer">
+            <div
+              key={post?._id}
+              className="relative group cursor-pointer"
+              onClick={() => handleFindPost(post?._id)}
+            >
               <img
                 src={post?.image?.url}
                 alt="postimage"
@@ -146,6 +199,13 @@ const ExplorePage = () => {
           No more posts to explore
         </div>
       )}
+
+      <CommentDialog
+        open={open}
+        setOpen={setOpen}
+        isFollowing={isFollowing}
+        followHandler={followHandler}
+      />
     </div>
   );
 };

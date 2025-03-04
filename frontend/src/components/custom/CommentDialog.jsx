@@ -126,7 +126,7 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
                     </div>
                   ) : (
                     <div
-                      className="cursor-pointer w-full"
+                      className="cursor-pointer w-full font-semibold"
                       onClick={() => {
                         followHandler(selectedPost?.author?._id);
                         setOpen(false);
@@ -135,7 +135,7 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
                       Follow
                     </div>
                   )}
-                  <div className="cursor-pointer w-full">Add to favorites</div>
+                  <div className="cursor-pointer w-full text-gray-500 font-semibold">Add to favorites</div>
                 </DialogContent>
               </Dialog>
             </div>

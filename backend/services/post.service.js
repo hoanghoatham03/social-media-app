@@ -254,7 +254,15 @@ export const getPostOfUserService = async (userId, page, limit) => {
 //get post by id
 export const getPostByIdService = async (postId) => {
   try {
-    const post = await Post.findById(postId);
+    const post = await Post.findById(postId)
+    .populate("author", "_id username profilePicture")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "userId",
+          select: "_id username profilePicture",
+        },
+      });
 
     if (!post) {
       throw new Error("Post not found");

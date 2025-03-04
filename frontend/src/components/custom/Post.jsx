@@ -234,7 +234,7 @@ const Post = ({ post }) => {
                 </Button>
               ))}
 
-            <Button variant="ghost" className="cursor-pointer w-fit">
+            <Button variant="ghost" className="cursor-pointer w-fit text-gray-500 font-semibold">
               Add to favorites
             </Button>
             {user && user?._id === post?.author._id && (

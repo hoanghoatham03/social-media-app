@@ -10,6 +10,9 @@ import { getUserProfile, followUser } from "@/api/user";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setUserProfile } from "@/redux/authSlice";
+import CommentDialog from "./CommentDialog";
+import { setSelectedPost } from "@/redux/postSlice";
+import { getPostById } from "@/api/post";
 
 const Profile = () => {
   const params = useParams();
@@ -22,6 +25,7 @@ const Profile = () => {
     bookmarkedPosts = [],
   } = useSelector((store) => store.auth);
   const [displayedPosts, setDisplayedPosts] = useState([]);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -90,6 +94,24 @@ const Profile = () => {
       </div>
     );
   }
+
+  const handleFindPost = async (postId) => {
+    try {
+      const res = await getPostById(postId);
+      
+      if (res.success) {
+        dispatch(setSelectedPost(res.data));
+        setOpen(true);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to find post");
+    }
+  };
+
+  const handlePostClick = (post) => {
+    handleFindPost(post._id);
+  };
 
   return (
     <div className="flex max-w-5xl justify-center mx-auto pl-10 mr-4">
@@ -225,7 +247,11 @@ const Profile = () => {
           ) : (
             <div className="grid grid-cols-3 gap-1">
               {displayedPosts.map((post) => (
-                <div key={post?._id} className="relative group cursor-pointer">
+                <div
+                  key={post?._id}
+                  className="relative group cursor-pointer"
+                  onClick={() => handlePostClick(post)}
+                >
                   <img
                     src={post?.image?.url}
                     alt="postimage"
@@ -249,6 +275,12 @@ const Profile = () => {
           )}
         </div>
       </div>
+      <CommentDialog
+        open={open}
+        setOpen={setOpen}
+        isFollowing={isFollowing}
+        followHandler={handleFollowUser}
+      />
     </div>
   );
 };

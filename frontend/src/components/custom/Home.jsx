@@ -20,7 +20,6 @@ const Home = () => {
 
   const fetchSuggestedFollowUsers = async () => {
     const users = await getSuggestFollowUser();
-    console.log("users",users);
     dispatch(setSuggestedFollowUsers(users.data.suggestedFollowUsers));
   };
 

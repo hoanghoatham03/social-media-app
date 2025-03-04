@@ -124,16 +124,12 @@ const ChatBox = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Helper to add a message if it's not a duplicate
   const addMessageIfNew = (message) => {
-    // Ensure the message has an ID
     const messageWithId = message._id
       ? message
       : { ...message, _id: generateUniqueId() };
 
-    // Check if we've already processed this message
     if (processedMessageIds.current.has(messageWithId._id)) {
-      console.log("Skipping duplicate message:", messageWithId._id);
       return;
     }
 

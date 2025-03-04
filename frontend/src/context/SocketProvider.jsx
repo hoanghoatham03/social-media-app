@@ -36,7 +36,6 @@ export const SocketProvider = ({ children }) => {
     });
 
     socketInstance.on("connect", () => {
-      console.log("Socket connected");
       setIsConnected(true);
 
       // Explicitly emit the user_connected event when socket connects
@@ -44,13 +43,11 @@ export const SocketProvider = ({ children }) => {
     });
 
     socketInstance.on("disconnect", () => {
-      console.log("Socket disconnected");
       setIsConnected(false);
     });
 
     // Listen for online users updates
     socketInstance.on("getOnlineUsers", (onlineUserIds) => {
-      console.log("Online users updated:", onlineUserIds);
       // Update Redux with online users
       dispatch(setOnlineUsers(onlineUserIds));
     });
@@ -67,7 +64,6 @@ export const SocketProvider = ({ children }) => {
 
     // Add event listener for page before unload
     const handleBeforeUnload = () => {
-      // Only emit disconnect when actually closing the page/app
       socketInstance.emit("user_disconnected", user._id);
     };
 
@@ -75,7 +71,6 @@ export const SocketProvider = ({ children }) => {
 
     // Listen for unread message notifications
     socketInstance.on("notify_unread_message", (messageData) => {
-      console.log("Unread message notification received", messageData);
       // Set unread message flag in Redux store
       dispatch(setHasUnreadMessage(true));
     });
