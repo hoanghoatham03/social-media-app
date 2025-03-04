@@ -21,7 +21,7 @@ export const createReplyComment = async (commentId, desc) => {
 };
 
 export const getReplies = async (commentId) => {
-  const res = await axiosInstance.get(`/comment/replies/${commentId}`);
+  const res = await axiosInstance.get(`/comment/reply/${commentId}`);
   return res.data;
 };
 

@@ -145,7 +145,9 @@ export const SocketProvider = ({ children }) => {
             <span className="font-bold">
               {notification.userInfo?.username}
             </span>{" "}
-            {notification.type === "likeComment" ? "liked" : "replied"} to your comment
+            {notification.type === "likeComment" && "liked your comment"}
+            {notification.type === "replyComment" && "replied to your comment"}
+            {notification.type === "likeReply" && "liked your reply"}
           </span>
         </div>
       );

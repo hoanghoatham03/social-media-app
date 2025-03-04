@@ -23,5 +23,7 @@ export const formatDate = (date) => {
       return formatDate.split(",")[0];
     }
     // formatDate: February 2025
-    return formatDate.split(",")[0] + "," + formatDate.split(",")[1].trim();
+    if (date) {
+      return formatDate.split(",")[0] + "," + formatDate.split(",")[1].trim();
+    }
   };

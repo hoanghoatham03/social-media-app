@@ -212,6 +212,8 @@ const LeftSidebar = () => {
                                     {notification.type === "comment" && "commented on your post"}
                                     {notification.type === "likeComment" && "liked your comment"}
                                     {notification.type === "replyComment" && "replied to your comment"}
+                                    {notification.type === "likeReply" && "liked your reply"}
+                                  
                                   </p>
                                 </div>
                               );

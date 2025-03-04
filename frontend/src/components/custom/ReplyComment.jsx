@@ -2,22 +2,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { formatDate } from "@/utils/formatDate";
 import {
   Heart,
-  MessageCircle,
   CornerDownLeft,
-  Trash,
 } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { likeComment, deleteComment } from "@/api/comment";
+import { likeComment } from "@/api/comment";
 import { useDispatch } from "react-redux";
 import { setPosts } from "@/redux/postSlice";
 import { useEffect } from "react";
-import { getReplies } from "@/api/comment";
-import { createReplyComment } from "@/api/comment";
-import ReplyComment from "./ReplyComment";
-import { Loader2 } from "lucide-react";
 
-const Comment = ({ comment }) => {
+import { createReplyComment, likeReplyComment } from "@/api/comment";
+
+
+const ReplyComment = ({ comment }) => {
   const { user } = useSelector((store) => store.auth);
   const { posts } = useSelector((store) => store.post);
   const dispatch = useDispatch();
@@ -30,7 +27,6 @@ const Comment = ({ comment }) => {
   const [replyText, setReplyText] = useState("");
   const [replies, setReplies] = useState([]);
   const [isShowReplies, setIsShowReplies] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setCommentLike(comment?.totalLikes);
@@ -47,11 +43,12 @@ const Comment = ({ comment }) => {
   //   fetchReplies();
   // }, [comment?._id]);
 
+
   const handleLike = async () => {
     try {
-      const res = await likeComment(comment?._id);
+      const res = await likeReplyComment(comment?._id);
 
-      console.log("handleLike", res);
+      console.log("handleLikeReply", res);
       if (res.success) {
         setIsLiked(!isLiked);
         setCommentLike(isLiked ? commentLike - 1 : commentLike + 1);
@@ -80,45 +77,17 @@ const Comment = ({ comment }) => {
         dispatch(setPosts(updatedPostData));
       }
     } catch (error) {
-      console.error("Error liking comment:", error);
+      console.error("Error liking reply comment:", error);
     }
   };
 
-  const handleShowReplyInput = async () => {
-    console.log("show reply");
-    if (!isShowReplies) {
-      await handleShowReplies(true);
-      setIsReplying(true);
-    } else if (isReplying && isShowReplies) {
-      setIsReplying(false);
-    } else if (!isReplying && isShowReplies) {
-      setIsReplying(!isReplying);
-    }
-  };
-
-  const fetchReplies = async () => {
-    const res = await getReplies(comment?._id);
-    if (res.success) {
-      setReplies(res?.data?.replies);
-    }
-  };
-
-  const handleShowReplies = async (isShow) => {
-    console.log("show replies");
-    console.log("isShow", isShow);
-    await fetchReplies();
-    if (isShow) {
-      setIsShowReplies(true);
-    }
-    setIsShowReplies(!isShowReplies);
-  };
 
   const handleReply = async () => {
     try {
       const res = await createReplyComment(comment?._id, replyText);
       console.log("reply", res);
       if (res.success) {
-        await fetchReplies();
+        setReplies([...replies, res.reply]);
         setTotalReplies(totalReplies + 1);
         setReplyText("");
       }
@@ -127,24 +96,8 @@ const Comment = ({ comment }) => {
     }
   };
 
-  const handleDeleteComment = async () => {
-    setIsDeleting(true);
-    try {
-      const res = await deleteComment(comment?._id);
-      console.log("delete comment", res);
-    if (res.success) {
-      setIsDeleting(false);
-    } 
-  } catch (error) {
-    console.error("Error deleting comment:", error);
-    setIsDeleting(false);
-  } finally {
-    setIsDeleting(false);
-  }
-  };
-
   return (
-    <div className="mb-5 w-full">
+    <div className="mt-3 w-full">
       <div className="flex gap-3 w-full">
         <Avatar>
           <AvatarImage src={comment?.userId?.profilePicture?.url} />
@@ -181,65 +134,33 @@ const Comment = ({ comment }) => {
                 <span className="text-gray-600 text-xs">Like</span>
               )}
             </button>
-            <button
-              className="flex items-center text-xs text-gray-600  hover:text-blue-500"
-              onClick={handleShowReplyInput}
-            >
-              <MessageCircle className="mr-1" size={14} /> Reply
-            </button>
-
-            <button className="flex items-center text-xs text-gray-600  hover:text-red-500" onClick={handleDeleteComment}>
-              {isDeleting ? <Loader2 className="mr-1" size={14} /> : <Trash className="mr-1" size={14} />}
-              {isDeleting ? "Deleting..." : "Delete"}
-            </button>
           </div>
 
-          {totalReplies !== 0 && !isShowReplies && (
-            <span
-              className="text-gray-600 text-xs cursor-pointer"
-              onClick={() => handleShowReplies()}
-            >
-              {totalReplies} replies
-            </span>
-          )}
 
-          {isShowReplies && (
-            <>
-              <span
-                className="text-gray-600 text-xs cursor-pointer"
-                onClick={() => handleShowReplies()}
-              >
-                Hide replies
-              </span>
-              {isReplying && (
-                <div className="mt-1 w-[80%]">
-                  <div className="flex items-center justify-between ">
-                    <input
-                      type="text"
-                      placeholder="Add a comment..."
-                      value={replyText}
-                      onChange={(e) => setReplyText(e.target.value)}
-                      className="outline-none text-sm w-full"
+        
+
+          {isReplying && (
+            <div className="mt-1 w-[80%]">
+              <div className="flex items-center justify-between ">
+                <input
+                  type="text"
+                  placeholder="Add a comment..."
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  className="outline-none text-sm w-full"
+                />
+                {replyText && (
+                  <>
+                    <CornerDownLeft
+                      size={18}
+                      onClick={handleReply}
+                      className=" cursor-pointer text-gray-600"
                     />
-                    {replyText && (
-                      <>
-                        <CornerDownLeft
-                          size={18}
-                          onClick={handleReply}
-                          className=" cursor-pointer text-gray-600"
-                        />
-                      </>
-                    )}
-                  </div>
-                  <hr className="my-2" />
-                </div>
-              )}
-              <div className="mt-1 w-[80%]">
-                {replies.map((reply) => (
-                  <ReplyComment key={reply._id} comment={reply} />
-                ))}
+                  </>
+                )}
               </div>
-            </>
+              <hr className="my-2" />
+            </div>
           )}
         </div>
       </div>
@@ -247,4 +168,4 @@ const Comment = ({ comment }) => {
   );
 };
 
-export default Comment;
+export default ReplyComment;

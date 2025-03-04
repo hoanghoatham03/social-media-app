@@ -90,7 +90,7 @@ export const deleteCommentService = async (commentId, userId) => {
 };
 
 //get comments of a post
-export const getCommentsService = async (postId, page, limit) => {
+export const getCommentsService = async (postId, page = 1, limit = 10) => {
   try {
     const post = await Post.findById(postId);
 
@@ -191,11 +191,13 @@ export const createReplyCommentService = async (commentId, desc, userId) => {
       userId,
     });
 
+    const user = await User.findById(userId).select("username profilePicture");
+
     //populate reply comment
     replyComment.populate("userId", "_id username profilePicture");
 
     //get receiver socket id
-    const authorId = comment.userId;
+    const authorId = comment.userId.toString();
     const receiverSocketId = getReceiverSocketId(authorId);
 
     //send notification to user
@@ -257,7 +259,7 @@ export const deleteReplyCommentService = async (replyId, userId) => {
 };
 
 //get replies of a comment
-export const getRepliesService = async (commentId, page, limit) => {
+export const getRepliesService = async (commentId, page = 1, limit = 10) => {
   try {
     const comment = await Comment.findById(commentId);
 
@@ -269,7 +271,7 @@ export const getRepliesService = async (commentId, page, limit) => {
     const replies = await ReplyComment.find({ commentId })
       .populate("userId", "_id username profilePicture")
       .sort({ createdAt: -1 })
-      .skip(skip)
+      .skip((page - 1) * limit)
       .limit(limit);
 
     //get total replies
@@ -311,18 +313,18 @@ export const likeReplyCommentService = async (replyId, userId) => {
     }
 
     //get receiver socket id
-    const authorId = replyComment.userId;
+    const authorId = replyComment.userId.toString();
     const receiverSocketId = getReceiverSocketId(authorId);
 
     //send notification to user
     if (authorId !== userId) {
-      io.to(receiverSocketId).emit("getNotification", {
+      io.to(receiverSocketId).emit("commentNotification", {
         user: userId,
         userInfo: {
           username: user.username,
           profilePicture: user.profilePicture,
         },
-        type: "like",
+        type: "likeReply",
         postId: replyComment.postId,
         commentId: replyComment.commentId,
         replyCommentId: replyComment._id,

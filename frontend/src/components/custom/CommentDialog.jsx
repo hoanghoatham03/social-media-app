@@ -19,7 +19,11 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
 
   useEffect(() => {
     if (selectedPost) {
-      setComment(selectedPost.comments);
+      const sortedComments = selectedPost.comments.slice().sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setComment(sortedComments);
+      
     }
   }, [selectedPost]);
 
@@ -39,7 +43,7 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
       const res = await createComment(selectedPost?._id, text);
 
       if (res.success) {
-        const updatedCommentData = [...comment, res.data];
+        const updatedCommentData = [res.data, ...comment];
         setComment(updatedCommentData);
 
         const updatedPostData = posts.map(p =>
@@ -126,7 +130,7 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
                   <span className='text-gray-600 text-sm'>{selectedPost?.desc}</span>
                 </div>
             </div>
-            <div className='flex-1 overflow-y-auto max-h-96 p-4'>
+            <div className='flex-1 overflow-y-auto max-h-52 p-4 scrollbar-hide'>
               {
                 comment.map((comment) => <Comment key={comment._id} comment={comment} />)
               }

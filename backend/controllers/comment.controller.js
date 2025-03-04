@@ -140,7 +140,7 @@ export const getReplies = async (req, res) => {
 
 //like reply comment
 export const likeReplyComment = async (req, res) => {
-  const { replyId } = req.body;
+  const { replyId } = req.params;
   const userId = req.userId;
 
   try {
