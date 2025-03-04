@@ -4,6 +4,95 @@ import Comment from "../models/comment.model.js";
 import cloudinary from "../utils/cloudinary.js";
 import { getReceiverSocketId, io } from "../utils/socket.js";
 
+//get posts for explore
+export const getPostsForExploreService = async (userId, page, limit) => {
+  try {
+    const skip = (page - 1) * limit;
+    const posts = await Post.find({})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("author", "_id username profilePicture");
+
+    const hasMore = posts.length === limit;
+    return { posts, hasMore };
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+//get posts of following users
+export const getPostsOfFollowingUsersService = async (
+  userId,
+  page,
+  limit,
+  followingUsers
+) => {
+  try {
+    let hasMoreFollowingPosts = true;
+
+    const skip = (page - 1) * limit;
+    const posts = await Post.find({ author: { $in: followingUsers } })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("author", "_id username profilePicture")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "userId",
+          select: "_id username profilePicture",
+        },
+      });
+
+    const countFollowingPosts = await Post.countDocuments({
+      author: { $in: followingUsers },
+    });
+
+    const countFollowingPostsPages = Math.floor(countFollowingPosts / limit);
+
+    if (posts.length < limit) {
+      hasMoreFollowingPosts = false;
+    }
+
+    return { posts, hasMoreFollowingPosts, countFollowingPostsPages };
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+//get other posts
+export const getOtherPostsService = async (
+  userId,
+  page,
+  limit,
+  followingUsers
+) => {
+  try {
+    const skip = (page - 1) * limit;
+    let hasMoreOtherPosts = true;
+    const posts = await Post.find({ author: { $nin: followingUsers } })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("author", "_id username profilePicture")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "userId",
+          select: "_id username profilePicture",
+        },
+      });
+
+    if (posts.length < limit) {
+      hasMoreOtherPosts = false;
+    }
+
+    return { posts, hasMoreOtherPosts };
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
 //get posts for news feed
 export const getPostsForNewsFeedService = async (
   userId,
@@ -11,51 +100,41 @@ export const getPostsForNewsFeedService = async (
   limit = 5
 ) => {
   try {
-    const skip = (page - 1) * limit;
     const user = await User.findById(userId).select("following");
     const followingUsers = user?.following || [];
 
     let posts = [];
     let hasMore = true;
+    let countFollowingPostsPages = 0;
 
-    // Get posts of following users
+    // Get posts of following users first
     if (followingUsers.length > 0) {
-      posts = await Post.find({ author: { $in: followingUsers } })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate("author", "_id username profilePicture")
-        .populate({
-          path: "comments",
-          populate: {
-            path: "userId",
-            select: "_id username profilePicture",
-          },
-        });
+      const result = await getPostsOfFollowingUsersService(
+        userId,
+        page,
+        limit,
+        followingUsers
+      );
+      posts = [...posts, ...result.posts];
+      hasMore = result.hasMoreFollowingPosts;
+      countFollowingPostsPages = result.countFollowingPostsPages;
     }
 
-    // If no following users or no posts, get other posts
-    if (!posts || posts.length === 0) {
-      posts = await Post.find({
-        author: { $nin: [...followingUsers, userId] },
-      })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate("author", "_id username profilePicture")
-        .populate({
-          path: "comments",
-          populate: {
-            path: "userId",
-            select: "_id username profilePicture",
-          },
-        });
+    // Get posts of other users if no following posts or reached end
+    if (posts.length === 0 || !hasMore) {
+      const result = await getOtherPostsService(
+        userId,
+        page - countFollowingPostsPages,
+        limit,
+        followingUsers
+      );
+      posts = [...posts, ...result.posts];
+      hasMore = result.hasMoreOtherPosts;
     }
 
-    hasMore = posts.length === limit;
     return { posts, hasMore };
   } catch (error) {
-    console.error("Get posts error:", error);
+    console.error("Get posts for news feed error:", error);
     throw new Error(error.message);
   }
 };
@@ -82,7 +161,10 @@ export const createPostService = async (userId, desc, fileUri) => {
     await User.findByIdAndUpdate(userId, { $push: { posts: post._id } });
 
     //save author info in post
-    post.populate("author", "_id username profilePicture");
+    await post.populate({
+      path: "author",
+      select: "_id username profilePicture",
+    });
 
     return post;
   } catch (error) {
@@ -110,11 +192,11 @@ export const updatePostService = async (postId, userId, desc, fileUri) => {
       const cloudResponse = await cloudinary.uploader.upload(fileUri, {
         resource_type: "auto",
       });
-      
+
       post.image = {
         public_id: cloudResponse.public_id,
         url: cloudResponse.url,
-      };  
+      };
     }
 
     await post.save();
@@ -172,7 +254,15 @@ export const getPostOfUserService = async (userId, page, limit) => {
 //get post by id
 export const getPostByIdService = async (postId) => {
   try {
-    const post = await Post.findById(postId);
+    const post = await Post.findById(postId)
+    .populate("author", "_id username profilePicture")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "userId",
+          select: "_id username profilePicture",
+        },
+      });
 
     if (!post) {
       throw new Error("Post not found");
@@ -212,6 +302,7 @@ export const likePostService = async (postId, userId) => {
         postId,
         message: `${user.username} liked your post`,
       };
+  
       io.to(receiverSocketId).emit("newNotification", notification);
     }
 
@@ -231,7 +322,7 @@ export const unlikePostService = async (postId, userId) => {
 
     await post.updateOne({ $pull: { likes: userId } });
     await post.updateOne({ $inc: { totalLikes: -1 } });
-    
+
     return "Post unliked successfully";
   } catch (error) {
     throw new Error(error.message);
@@ -250,14 +341,14 @@ export const bookmarkPostService = async (postId, userId) => {
     const user = await User.findById(userId);
 
     //check if user already bookmarked the post
-    const isBookmarked = user.bookmarks.includes(postId);
+    const isBookmarked = user.bookmarks.some((bookmark) => bookmark._id === post._id);
 
     if (isBookmarked) {
-      await User.findByIdAndUpdate(userId, { $pull: { bookmarks: postId } });
+      await User.findByIdAndUpdate(userId, { $pull: { bookmarks: post } });
       return "Post unbookmarked successfully";
     }
 
-    await User.findByIdAndUpdate(userId, { $addToSet: { bookmarks: postId } });
+    await User.findByIdAndUpdate(userId, { $addToSet: { bookmarks: post } });
     return "Post bookmarked successfully";
   } catch (error) {
     throw new Error(error.message);
