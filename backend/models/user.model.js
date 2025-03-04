@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema(
       },
       url: {
         type: String,
-        default: "",
+        default: "https://res.cloudinary.com/dkqxladop/image/upload/v1740154423/rd3twsr2e5oaafwtmgzv.png",
       },
     },
     bio: {

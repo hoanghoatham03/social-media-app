@@ -5,10 +5,12 @@ import {
   loginService,
   getUserService,
   updateUserService,
-  getSuggestUserService,
+  getSuggestFollowUserService,
   followUserService,
   refreshAccessTokenService,
   logoutService,
+  getSuggestChatUserService,
+  searchUserService,
 } from "../services/user.service.js";
 
 // Register a new user
@@ -81,7 +83,14 @@ export const login = async (req, res) => {
 
 //refresh the access token
 export const refreshAccessToken = async (req, res) => {
-  const { refreshToken } = req.body;
+  try {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+      return res.status(405).json({
+      message: "Don't have refresh token",
+      success: false,
+    });
+  }
   const accessToken = await refreshAccessTokenService(refreshToken);
   res.status(200).json({
     message: "Access token refreshed successfully",
@@ -90,6 +99,12 @@ export const refreshAccessToken = async (req, res) => {
       accessToken,
     },
   });
+  } catch (error) {
+    res.status(405).json({
+      message: error.message,
+      success: false,
+    });
+  }
 };
 
 //logout the user
@@ -165,17 +180,17 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-//get suggestUser
-export const getSuggestUser = async (req, res) => {
+//get suggest follow user
+export const getSuggestFollowUser = async (req, res) => {
   const userId = req.userId;
 
   try {
-    const suggestUser = await getSuggestUserService(userId);
+    const suggestedFollowUsers = await getSuggestFollowUserService(userId);
     res.status(200).json({
       message: "Suggested users fetched successfully",
       success: true,
       data: {
-        suggestUser,
+        suggestedFollowUsers,
       },
     });
   } catch (error) {
@@ -198,3 +213,40 @@ export const followUser = async (req, res) => {
     res.status(500).json(error);
   }
 };
+
+//get suggest chat user
+export const getSuggestChatUser = async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const suggestedChatUsers = await getSuggestChatUserService(userId);
+    res.status(200).json({
+      message: "Suggested users fetched successfully",
+      success: true,
+      data: {
+        suggestedChatUsers,
+      },
+    });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+
+//search user
+export const searchUser = async (req, res) => {
+  const { username } = req.query;
+
+  try {
+    const users = await searchUserService(username);
+    res.status(200).json({
+      message: "Users fetched successfully",
+      success: true,
+      data: {
+        users,
+      },
+    });
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+

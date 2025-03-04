@@ -9,12 +9,12 @@ export const isAuthenticated = (req, res, next) => {
 
   const accessToken = authHeader.split(" ")[1];
 
-  jwt.verify(accessToken, process.env.JWT_SECRET, (err, userId) => {
+  jwt.verify(accessToken, process.env.JWT_SECRET, (err, decode) => {
     if (err) {
       return res.status(403).json("Invalid token");
     }
 
-    req.userId = userId;
+    req.userId = decode.userId;
     next();
   });
 };

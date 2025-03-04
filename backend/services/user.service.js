@@ -130,7 +130,10 @@ export const logoutService = async (userId) => {
 //get the user
 export const getUserService = async (userId) => {
   try {
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).populate({
+      path: "posts",
+      createdAt: -1,
+    });
 
     if (!user) {
       throw new Error("User not found");
@@ -167,10 +170,11 @@ export const updateUserService = async (userId, req) => {
 
     if (bio) user.bio = bio;
     if (gender) user.gender = gender;
-    if (cloudResponse) user.profilePicture = {
-      public_id: cloudResponse.public_id,
-      url: cloudResponse.url,
-    };
+    if (cloudResponse)
+      user.profilePicture = {
+        public_id: cloudResponse.public_id,
+        url: cloudResponse.url,
+      };
 
     const updatedUser = await user.save();
     const { password, ...userInfo } = updatedUser._doc;
@@ -181,7 +185,7 @@ export const updateUserService = async (userId, req) => {
 };
 
 //get suggestUser
-export const getSuggestUserService = async (userId) => {
+export const getSuggestFollowUserService = async (userId) => {
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -191,12 +195,18 @@ export const getSuggestUserService = async (userId) => {
     //get suggest users
     const suggestUser = user.following.length
       ? await User.aggregate([
-          { $match: { _id: { $nin: [...user.following, userId] } } },
+          {
+            $match: {
+              _id: {
+                $nin: [...user.following, user._id],
+              },
+            },
+          },
           { $sample: { size: 5 } },
           { $project: { password: 0 } },
         ])
       : await User.aggregate([
-          { $match: { _id: { $ne: userId } } },
+          { $match: { _id: { $ne: user._id } } },
           { $sample: { size: 5 } },
           { $project: { password: 0 } },
         ]);
@@ -237,3 +247,36 @@ export const followUserService = async (userId, followId) => {
     throw new Error(error.message);
   }
 };
+
+//get suggestChatUser
+export const getSuggestChatUserService = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    //get suggest chat users
+    const suggestUser = await User.aggregate([
+      { $match: { _id: { $ne: user._id } } },
+      { $sample: { size: 10 } },
+      { $project: { password: 0 } },
+    ]);
+
+    return suggestUser;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+//search user
+export const searchUserService = async (username) => {
+  try {
+    const users = await User.find({ username: { $regex: username, $options: "i" } });
+    return users;
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
+
+
