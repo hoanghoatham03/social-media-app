@@ -79,7 +79,7 @@ export const deleteCommentService = async (commentId, userId) => {
       $pull: { comments: commentId },
     });
     await Post.findByIdAndUpdate(comment.postId, {
-      $inc: { totalComments: -1 },
+      $inc: { totalComments: - 1 - comment.totalReplies },
     });
 
     return "Comment deleted successfully";
@@ -192,6 +192,10 @@ export const createReplyCommentService = async (commentId, desc, userId) => {
     });
 
     const user = await User.findById(userId).select("username profilePicture");
+    const post = await Post.findById(comment.postId);
+
+    //update total comments of the post
+    await post.updateOne({ $inc: { totalComments: 1 } });
 
     //populate reply comment
     replyComment.populate("userId", "_id username profilePicture");
@@ -243,12 +247,20 @@ export const deleteReplyCommentService = async (replyId, userId) => {
     //delete reply comment
     await ReplyComment.findByIdAndDelete(replyId);
 
+
     //update comment replies
     await Comment.findByIdAndUpdate(replyComment.commentId, {
       $pull: { replies: replyId },
     });
     await Comment.findByIdAndUpdate(replyComment.commentId, {
       $inc: { totalReplies: -1 },
+    });
+
+    const comment = await Comment.findById(replyComment.commentId);
+
+    //update total comments of the post
+    await Post.findByIdAndUpdate(comment.postId, {
+      $inc: { totalComments: -1 },
     });
 
     return "Reply comment deleted successfully";
