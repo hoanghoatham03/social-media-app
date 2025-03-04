@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { formatDate } from "@/utils/formatDate";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
@@ -185,6 +186,7 @@ const Post = ({ post }) => {
     <div className="my-8 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          <Link to={`/profile/${post.author?._id}`}>
           <Avatar>
             <AvatarImage
               src={post.author?.profilePicture?.url}
@@ -192,14 +194,17 @@ const Post = ({ post }) => {
             />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
+          </Link>
           <div className="flex items-center gap-3 font-medium">
-            <h1>
-              {post.author?.username}{" "}
-              <span className="text-gray-400 text-sm">•</span>{" "}
-              <span className="text-gray-400 text-sm">
+            <Link to={`/profile/${post.author?._id}`}>
+              <h1>
+                {post.author?.username}{" "}
+                <span className="text-gray-400 text-sm">•</span>{" "}
+                <span className="text-gray-400 text-sm">
                 {formatDate(post.createdAt)}
               </span>
             </h1>
+            </Link>
             {user?._id === post.author._id && (
               <Badge variant="secondary">Author</Badge>
             )}

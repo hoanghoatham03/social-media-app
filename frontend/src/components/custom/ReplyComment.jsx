@@ -15,7 +15,7 @@ import { useEffect } from "react";
 import { createReplyComment, likeReplyComment } from "@/api/comment";
 import { Dialog, DialogTrigger, DialogContent } from "../ui/dialog";
 import { Trash } from "lucide-react";
-
+import { Link } from "react-router-dom";
 
 const ReplyComment = ({ comment, onDelete    }) => {
   const { user } = useSelector((store) => store.auth);
@@ -39,14 +39,6 @@ const ReplyComment = ({ comment, onDelete    }) => {
     setIsLiked(comment?.likes.includes(user?._id) || false);
   }, [comment]);
 
-  // useEffect(() => {
-  //   const fetchReplies = async () => {
-  //     const res = await getReplies(comment?._id);
-  //     console.log("replies", res);
-  //     setReplies(res.replies);
-  //   };
-  //   fetchReplies();
-  // }, [comment?._id]);
 
 
   const handleLike = async () => {
@@ -115,14 +107,18 @@ const ReplyComment = ({ comment, onDelete    }) => {
   return (
     <div className="mt-3 w-full">
       <div className="flex gap-3 w-full">
+        <Link to={`/profile/${comment?.userId?._id}`}>
         <Avatar>
           <AvatarImage src={comment?.userId?.profilePicture?.url} />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>
+        </Link>
         <div className="w-full" style={{ overflowX: "hidden" }}>
           <p className="break-words">
             <span className="font-semibold text-sm mr-2">
-              {comment?.userId?.username}
+              <Link to={`/profile/${comment?.userId?._id}`}>
+                {comment?.userId?.username}
+              </Link>
             </span>
             <span className="text-gray-600 text-xs">{comment?.desc}</span>
           </p>

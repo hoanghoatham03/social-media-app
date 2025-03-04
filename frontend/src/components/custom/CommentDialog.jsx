@@ -94,7 +94,7 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
           <div className="w-1/2 flex flex-col justify-between">
             <div className="flex items-center justify-between p-4">
               <div className="flex gap-3 items-center">
-                <Link>
+                <Link to={`/profile/${selectedPost?.author?._id}`}>
                   <Avatar>
                     <AvatarImage
                       src={selectedPost?.author?.profilePicture?.url}
@@ -103,7 +103,7 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
                   </Avatar>
                 </Link>
                 <div>
-                  <Link className="font-semibold text-sm">
+                  <Link to={`/profile/${selectedPost?.author?._id}`} className="font-semibold text-sm">
                     {selectedPost?.author?.username}
                   </Link>
                 </div>
@@ -142,7 +142,7 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
             <hr />
             <div className="p-4 flex flex-col gap-2">
               <div className="flex gap-3 items-center">
-                <Link>
+                <Link to={`/profile/${selectedPost?.author?._id}`}>
                   <Avatar>
                     <AvatarImage
                       src={selectedPost?.author?.profilePicture?.url}
@@ -151,7 +151,7 @@ const CommentDialog = ({ open, setOpen, isFollowing, followHandler }) => {
                   </Avatar>
                 </Link>
                 <div>
-                  <Link className="font-semibold text-sm">
+                  <Link to={`/profile/${selectedPost?.author?._id}`} className="font-semibold text-sm">
                     {selectedPost?.author?.username}
                   </Link>
                 </div>
