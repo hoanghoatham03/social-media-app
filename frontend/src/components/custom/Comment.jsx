@@ -13,7 +13,7 @@ import { likeComment } from "@/api/comment";
 import { useDispatch } from "react-redux";
 import { setPosts } from "@/redux/postSlice";
 import { useEffect } from "react";
-import { getReplies } from "@/api/comment";
+import { getReplies, deleteReplyComment } from "@/api/comment";
 import { createReplyComment } from "@/api/comment";
 import ReplyComment from "./ReplyComment";
 import { Loader2 } from "lucide-react";
@@ -151,6 +151,18 @@ const Comment = ({ comment, onDelete }) => {
     }
   };
 
+  const replyDeleteHandler = async (replyId) => {
+    try {
+      const res = await deleteReplyComment(replyId);
+      if (res.success) {
+        await fetchReplies();
+        setTotalReplies(totalReplies - 1);
+      }
+    } catch (error) {
+      console.error("Error deleting reply:", error);
+    }
+  };
+
   return (
     <div className="mb-5 w-full">
       <div className="flex gap-3 w-full">
@@ -263,7 +275,11 @@ const Comment = ({ comment, onDelete }) => {
               )}
               <div className="mt-1 w-[80%]">
                 {replies.map((reply) => (
-                  <ReplyComment key={reply._id} comment={reply} />
+                  <ReplyComment
+                    key={reply._id}
+                    comment={reply}
+                    onDelete={replyDeleteHandler}
+                  />
                 ))}
               </div>
             </>

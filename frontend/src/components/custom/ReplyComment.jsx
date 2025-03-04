@@ -3,18 +3,21 @@ import { formatDate } from "@/utils/formatDate";
 import {
   Heart,
   CornerDownLeft,
+  MoreHorizontal,
+  Loader2,
 } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
-import { likeComment } from "@/api/comment";
 import { useDispatch } from "react-redux";
 import { setPosts } from "@/redux/postSlice";
 import { useEffect } from "react";
 
 import { createReplyComment, likeReplyComment } from "@/api/comment";
+import { Dialog, DialogTrigger, DialogContent } from "../ui/dialog";
+import { Trash } from "lucide-react";
 
 
-const ReplyComment = ({ comment }) => {
+const ReplyComment = ({ comment, onDelete    }) => {
   const { user } = useSelector((store) => store.auth);
   const { posts } = useSelector((store) => store.post);
   const dispatch = useDispatch();
@@ -27,6 +30,8 @@ const ReplyComment = ({ comment }) => {
   const [replyText, setReplyText] = useState("");
   const [replies, setReplies] = useState([]);
   const [isShowReplies, setIsShowReplies] = useState(false);
+  const isCurrentUserReply = user?._id === comment?.userId?._id;
+  const [isDeletingReply, setIsDeletingReply] = useState(false);
 
   useEffect(() => {
     setCommentLike(comment?.totalLikes);
@@ -96,6 +101,17 @@ const ReplyComment = ({ comment }) => {
     }
   };
 
+  const handleDeleteReply = async () => {
+    setIsDeletingReply(true);
+    try {
+      await onDelete(comment?._id);
+    } catch (error) {
+      console.error("Error deleting reply:", error);
+    } finally {
+      setIsDeletingReply(false);
+    }
+  };
+
   return (
     <div className="mt-3 w-full">
       <div className="flex gap-3 w-full">
@@ -134,6 +150,25 @@ const ReplyComment = ({ comment }) => {
                 <span className="text-gray-600 text-xs">Like</span>
               )}
             </button>
+            {isCurrentUserReply && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <MoreHorizontal className="cursor-pointer h-4 w-4" />
+                </DialogTrigger>
+                <DialogContent className="flex flex-col items-center text-sm text-center">
+                  <div className="cursor-pointer w-full text-[#ED4956] font-bold flex items-center justify-center gap-2" onClick={handleDeleteReply}>
+                    {isDeletingReply ? (
+                      <Loader2 className="animate-spin" size={16} />
+                    ) : (
+                      <>
+                        <Trash size={16} />
+                        <span>Delete Reply</span>
+                      </>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
 
