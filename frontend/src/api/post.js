@@ -25,12 +25,20 @@ export const bookmarkPost = async (postId) => {
   return response.data;
 };
 
-export const updatePost = async (postId, formData) => {
-  const response = await axiosInstance.post("/post/update", {
-    postId,
-    formData,
-  });
-  return response.data;
+export const updatePost = async (postId, postData) => {
+  try {
+    const response = await axiosInstance.put(`/post/${postId}`, postData, {
+      headers: {
+        "Content-Type":
+          postData instanceof FormData
+            ? "multipart/form-data"
+            : "application/json",
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
 };
 
 export const deletePost = async (postId) => {

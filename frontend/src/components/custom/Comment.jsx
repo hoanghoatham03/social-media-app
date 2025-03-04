@@ -6,6 +6,7 @@ import {
   CornerDownLeft,
   Trash,
   MoreHorizontal,
+  Edit,
 } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -163,6 +164,10 @@ const Comment = ({ comment, onDelete }) => {
     }
   };
 
+  const handleEdit = async () => {
+    console.log("edit");
+  };
+
   return (
     <div className="mb-5 w-full">
       <div className="flex gap-3 w-full">
@@ -217,6 +222,20 @@ const Comment = ({ comment, onDelete }) => {
                   <MoreHorizontal className="cursor-pointer h-4 w-4" />
                 </DialogTrigger>
                 <DialogContent className="flex flex-col items-center text-sm text-center w-[30%]">
+                  
+                <div
+                    className="cursor-pointer  font-bold flex items-center justify-center gap-2"
+                    onClick={handleEdit}
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="animate-spin" size={16} />
+                    ) : (
+                      <>
+                        <Edit size={16} />
+                        <span>Edit Comment</span>
+                      </>
+                    )}
+                  </div>
                   <div
                     className="cursor-pointer  text-[#ED4956] font-bold flex items-center justify-center gap-2"
                     onClick={handleDelete}

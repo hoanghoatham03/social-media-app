@@ -19,16 +19,19 @@ import { formatDate } from "@/utils/formatDate";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import UpdatePost from "./UpdatePost";
+import { useEffect } from "react";
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
   const { user, bookmarkedPosts = [] } = useSelector((store) => store.auth);
   const { posts } = useSelector((store) => store.post);
-  const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
+  const [liked, setLiked] = useState(post?.likes?.includes(user?._id) || false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [postLike, setPostLike] = useState(post.totalLikes);
-  const [comment, setComment] = useState(post.comments);
+  const [postLike, setPostLike] = useState(post?.totalLikes);
+  const [comment, setComment] = useState(post?.comments);
   const [isMore, setIsMore] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(
     bookmarkedPosts.some((bookmark) => bookmark._id === post._id)
@@ -36,6 +39,8 @@ const Post = ({ post }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [mainDialogOpen, setMainDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const changeEventHandler = (e) => {
     const inputText = e.target.value;
@@ -45,6 +50,11 @@ const Post = ({ post }) => {
       setText("");
     }
   };
+
+  useEffect(() => {
+    
+  
+  }, [posts]);
 
   const likeHandler = async (postId) => {
     try {
@@ -121,7 +131,7 @@ const Post = ({ post }) => {
       toast.error("Failed to delete post");
     } finally {
       setIsDeleting(false);
-    } 
+    }
   };
 
   const bookmarkHandler = async () => {
@@ -180,38 +190,47 @@ const Post = ({ post }) => {
     }
   };
 
-   
+  const editPostHandler = () => {
+    setMainDialogOpen(false);
+    setEditDialogOpen(true);
+  };
 
   return (
     <div className="my-8 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Link to={`/profile/${post.author?._id}`}>
-          <Avatar>
-            <AvatarImage
-              src={post.author?.profilePicture?.url}
-              alt="post_image"
-            />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
+            <Avatar>
+              <AvatarImage
+                src={post.author?.profilePicture?.url}
+                alt="post_image"
+              />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
           </Link>
           <div className="flex items-center gap-3 font-medium">
             <Link to={`/profile/${post.author?._id}`}>
               <h1>
-                {post.author?.username}{" "}
+                {post?.author?.username}{" "}
                 <span className="text-gray-400 text-sm">•</span>{" "}
                 <span className="text-gray-400 text-sm">
-                {formatDate(post.createdAt)}
-              </span>
-            </h1>
+                  {formatDate(post?.createdAt)}
+                </span>
+              </h1>
             </Link>
-            {user?._id === post.author._id && (
+            {user?._id === post?.author?._id && (
               <Badge variant="secondary">Author</Badge>
             )}
           </div>
         </div>
-        <Dialog>
-          <DialogTrigger asChild onClick={() => checkFollow(post?.author?._id)}>
+        <Dialog open={mainDialogOpen} onOpenChange={setMainDialogOpen}>
+          <DialogTrigger
+            asChild
+            onClick={() => {
+              checkFollow(post?.author?._id);
+              setMainDialogOpen(true);
+            }}
+          >
             <MoreHorizontal className="cursor-pointer" />
           </DialogTrigger>
           <DialogContent className="flex flex-col items-center text-sm text-center">
@@ -234,28 +253,40 @@ const Post = ({ post }) => {
                 </Button>
               ))}
 
-            <Button variant="ghost" className="cursor-pointer w-fit text-gray-500 font-semibold">
+            <Button
+              variant="ghost"
+              className="cursor-pointer w-fit text-gray-500 font-semibold"
+            >
               Add to favorites
             </Button>
-            {user && user?._id === post?.author._id && (
-              <Button
-                onClick={deletePostHandler}
-                variant="ghost"
-                className="cursor-pointer w-fit"
-              >
-                {isDeleting ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <span className="text-red-600">Delete</span>
-                )}
-              </Button>
+            {user && user?._id === post?.author?._id && (
+              <div className="">
+                <Button
+                  onClick={deletePostHandler}
+                  variant="ghost"
+                  className="cursor-pointer w-fit"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <span className="text-red-600">Delete</span>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="cursor-pointer w-fit"
+                  onClick={editPostHandler}
+                >
+                  Edit
+                </Button>
+              </div>
             )}
           </DialogContent>
         </Dialog>
       </div>
       <img
         className="rounded-sm my-2 w-full aspect-square object-cover"
-        src={post.image?.url}
+        src={post?.image?.url}
         alt="post_img"
       />
 
@@ -263,12 +294,12 @@ const Post = ({ post }) => {
         <div className="flex items-center gap-3">
           {liked ? (
             <FaHeart
-              onClick={() => likeHandler(post._id)}
+              onClick={() => likeHandler(post?._id)}
               size={"22px"}
               className="cursor-pointer text-red-600"
             />
           ) : (
-            <FaRegHeart onClick={() => likeHandler(post._id)} size={"22px"} />
+            <FaRegHeart onClick={() => likeHandler(post?._id)} size={"22px"} />
           )}
 
           <MessageCircle
@@ -346,6 +377,11 @@ const Post = ({ post }) => {
         )}
       </div>
       <div className="h-[1px] bg-gray-200 my-2"></div>
+      <UpdatePost
+        open={editDialogOpen}
+        setOpen={setEditDialogOpen}
+        post={post}
+      />
     </div>
   );
 };

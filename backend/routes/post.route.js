@@ -20,8 +20,8 @@ router.route("/:postId").get(isAuthenticated, getPostById);
 router.route("/user/posts").get(isAuthenticated, getPostOfUser);
 router.route("/create").post(upload.single("image"), isAuthenticated, createPost);
 router
-  .route("/update")
-  .post(upload.single("image"), isAuthenticated, updatePost);
+  .route("/:postId")
+  .put(upload.single("image"), isAuthenticated, updatePost);
 router.route("/delete").post(isAuthenticated, deletePost);
 router.route("/like").post(isAuthenticated, likePost);
 router.route("/unlike").post(isAuthenticated, unlikePost);

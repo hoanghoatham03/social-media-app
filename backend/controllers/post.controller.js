@@ -122,7 +122,7 @@ export const createPost = async (req, res) => {
 //update post
 export const updatePost = async (req, res) => {
   const userId = req.userId;
-  const { postId } = req.body;
+  const { postId } = req.params;
   const { desc } = req.body;
   const image = req.file;
 
