@@ -25,7 +25,7 @@ export const SocketProvider = ({ children }) => {
     if (!user) return;
 
     // Connect to the Socket.IO server
-    const socketInstance = io(import.meta.env.VITE_REACT_APP_BE_URL, {
+    const socketInstance = io(import.meta.env.VITE_REACT_APP_BE_URL || "http://localhost:8000", {
       query: { userId: user._id },
       // Prevent socket from disconnecting when navigating between pages
       forceNew: false,
