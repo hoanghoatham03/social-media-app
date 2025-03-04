@@ -41,6 +41,7 @@ const Post = ({ post }) => {
   const navigate = useNavigate();
   const [mainDialogOpen, setMainDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [totalComments, setTotalComments] = useState(post?.totalComments);
 
   const changeEventHandler = (e) => {
     const inputText = e.target.value;
@@ -52,9 +53,10 @@ const Post = ({ post }) => {
   };
 
   useEffect(() => {
-    
-  
-  }, [posts]);
+    setComment(post?.comments);
+    setPostLike(post?.totalLikes);
+    setTotalComments(post?.totalComments);
+  }, [post]);
 
   const likeHandler = async (postId) => {
     try {
@@ -349,8 +351,8 @@ const Post = ({ post }) => {
           }}
           className="cursor-pointer text-sm text-gray-400"
         >
-          View all {post.totalComments} comments
-        </span>
+            View all {totalComments} comments
+          </span>
       )}
       <CommentDialog
         open={open}
