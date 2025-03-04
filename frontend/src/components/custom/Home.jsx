@@ -7,6 +7,7 @@ import { setPosts, setPage, setHasMore } from "@/redux/postSlice";
 import { getPostsForNewsFeed } from "@/api/post";
 import { getSuggestFollowUser } from "@/api/user";
 import { setSuggestedFollowUsers } from "@/redux/authSlice";
+import Story from "./Story";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -50,12 +51,17 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="flex">
-      <div className="flex-grow">
-        <NewFeed />
-        <Outlet />
+    <div className="flex justify-center w-full">
+      <div className="w-full max-w-[1200px] flex gap-10 p-4">
+        <div className="w-full md:w-[65%]">
+          <Story />
+          <NewFeed fetchPosts={fetchPosts} />
+        </div>
+        <div className="hidden md:block md:w-[35%]">
+          <RightSidebar />
+        </div>
       </div>
-      <RightSidebar />
+      <Outlet />
     </div>
   );
 };

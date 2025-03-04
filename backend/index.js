@@ -4,10 +4,11 @@ import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import connectDB from "./utils/db.js";
-import userRoutes from "./routes/user.route.js";
-import postRoutes from "./routes/post.route.js";
-import commentRoutes from "./routes/comment.route.js";
-import messageRoutes from "./routes/message.route.js";
+import userRoutes from "./routes/user.routes.js";
+import postRoutes from "./routes/post.routes.js";
+import commentRoutes from "./routes/comment.routes.js";
+import messageRoutes from "./routes/message.routes.js";
+import storyRoutes from "./routes/story.routes.js";
 import { createServer } from "http";
 import { app, server } from "./utils/socket.js";
 
@@ -16,9 +17,9 @@ dotenv.config();
 const PORT = process.env.PORT || 8000;
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
 app.use(cookieParser());
-app.use(urlencoded({ extended: true }));
+app.use(urlencoded({ extended: true, limit: "50mb" }));
 const corsOptions = {
   origin: ["http://localhost:5173"],
   credentials: true,
@@ -34,6 +35,7 @@ app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/post", postRoutes);
 app.use("/api/v1/comment", commentRoutes);
 app.use("/api/v1/message", messageRoutes);
+app.use("/api/v1/story", storyRoutes);
 
 // Start server
 server.listen(PORT, () => {

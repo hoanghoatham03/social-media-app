@@ -3,6 +3,8 @@
   padding: 0;
   box-sizing: border-box;
 }
+
+
 /* always show scrollbar */
 ::-webkit-scrollbar {
   width: 7px;
