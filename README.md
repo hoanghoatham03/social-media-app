@@ -3,6 +3,9 @@
 A fully-featured social media platform with real-time messaging, post sharing, stories, and more.
 
 ![Social Media App](./frontend/public/demo/Home.png)
+![Social Media App](./frontend/public/demo/profile.png)
+![Social Media App](./frontend/public/demo/comment.png)
+![Social Media App](./frontend/public/demo/Mess.png)
 
 ## 🚀 Technologies Used
 
